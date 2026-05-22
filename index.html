@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mis Estampas Mundial 2026</title>
+    
+    <!-- Enlace al archivo de estilos externo -->
+    <link rel="stylesheet" href="stylesStampa.css">
+</head>
+<body>
+
+    <!-- Input oculto para abrir la ventana de archivos -->
+    <input type="file" id="input-archivo-oculto" accept="image/*" style="display: none;">
+
+    <!-- BARRA SUPERIOR (NAVBAR) -->
+<header class="navbar">
+        <div class="navbar-linea-superior">
+            <div class="logo">Álbum 2026 ⚽</div>
+            <!-- Botón exclusivo para celular que activará el menú -->
+            <button id="btn-toggle-filtros" class="btn-toggle-filtros">Filtros ⚙️</button>
+        </div>
+
+        <!-- Envolvemos el menú original en esta nueva clase -->
+        <div class="menu-filtros-contenedor" id="menu-filtros-contenedor">
+            <div class="menu-filtros">
+                <!-- Buscador de texto -->
+                <input class="filtro-Texto" type="text" id="buscador-nombre" placeholder="Buscar jugador..." >
+
+                <!-- Filtro por País -->
+                <select id="filtro-pais"  class="filtro-Texto">
+                    <option value="">Todos los Países</option>
+                </select>
+
+                <!-- Filtro por Tipo de Estampa -->
+                <select id="filtroTipo" class="filtro-Texto">
+                    <option value="">Todos los tipos</option>
+                    <option value="1">Escudos</option>
+                    <option value="2">Equipos</option>
+                    <option value="3">Historia</option>
+                    <option value="4">Coca-Cola</option>
+                    <option value="5">Normales (Jugadores)</option>
+                </select>
+
+                <!-- Filtro por Estado de Posesión -->
+                <select id="filtroEstado"  class="filtro-Texto">
+                    <option value="">Cualquier estado</option>
+                    <option value="no_tengo">No tengo (Faltantes)</option>
+                    <option value="tengo">Los que tengo (Al menos 1)</option>
+                    <option value="repetidos">Repetidos (2 o más)</option>
+                </select>
+
+                <!-- Selector de Ordenamiento -->
+                <select id="ordenarPor"  class="filtro-Texto">
+                    <option value="numero_album" selected>Ordenar por: Número de Álbum</option>
+                    <option value="ultima_modificacion">Ordenar por: Última modificación</option>
+                    <option value="nombre">Ordenar por: Nombre (A-Z)</option>
+                </select>
+            </div>
+        </div>
+    </header>
+    <!-- VENTANA PROTECTORA DESLIZABLE (Envuelve solo a la cuadrícula) -->
+
+<!-- CONTENEDOR DE TARJETAS (GRID DIRECTO AL 100%) -->
+    <main class="contenedor-grid" id="grid-jugadores">
+        <p style="padding: 10px; color: #666;">Cargando estampas...</p>
+    </main>
+
+    <!-- Tu Script unificado al final de todo -->
+    <script src="scriptStampa.js"></script>
+
+</body>
+</html>
