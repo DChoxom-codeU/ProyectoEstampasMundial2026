@@ -185,8 +185,8 @@ display:flex;
 flex-direction:column;
 align-items:center;
 justify-content:space-between;
-gap:6px;
-padding:6px;
+gap:3px;
+padding:3px;
 background:#101827;
 border-radius:12px;
 border:1px solid var(--borde);
@@ -291,11 +291,19 @@ grid-template-columns:repeat(5,1fr);
 .contenedor-grid{
 grid-template-columns:repeat(6,1fr);
 }
+.card{
+padding:0px;
+}
+
 }
 
 @media (max-width:950px){
 body{
 padding-top:150px;
+}
+
+.card{
+padding:0px;
 }
 
 .navbar{
@@ -373,12 +381,13 @@ padding:10px;
 }
 
 .card{
-padding:8px;
+padding:2px;
 border-radius:14px;
 }
 
 .card-bloque-superior{
 flex-direction:column;
+width:100%;
 }
 
 .card-controles-laterales{
@@ -399,4 +408,17 @@ font-size:13px;
 .jugador-pais{
 font-size:11px;
 }
+}
+
+
+
+/* Efecto visual al tocar el área de la estampa */
+.imagen-clickeable {
+    transition: transform 0.1s ease;
+    -webkit-tap-highlight-color: transparent; /* Quita el cuadro azul feo en Android */
+}
+
+.imagen-clickeable:active {
+    transform: scale(0.96); /* Hace un pequeño efecto de "hundido" al mantener presionado */
+    filter: brightness(0.9); /* Oscurece un pelín la imagen al tocarla */
 }

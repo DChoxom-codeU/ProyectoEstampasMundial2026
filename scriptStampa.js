@@ -36,7 +36,7 @@ const URL_IMAGEN_POR_DEFECTO =
 document.addEventListener("DOMContentLoaded", () => {
     configurarMenuFiltros();
     configurarEventos();
-    
+
     configurarPaginacion();
     iniciarApp();
 
@@ -630,27 +630,30 @@ async function cargarEstampasDesdeBaseDatos(
         // ==========================================
 
         estampas.forEach(jugador => {
-            const html = `
-                <div class="card">
-                    <div class="card-bloque-superior">
-                        <div class="card-imagen-wrapper">
+    const html = `
+        <div class="card">
+            <div class="card-bloque-superior">
+                <!-- 👇 AQUÍ AGREGAMOS EL ONCLICK PARA QUE SUME AL TOCAR LA IMAGEN -->
+                <div class="card-imagen-wrapper imagen-clickeable" 
+                     onclick="cambiarCantidad(${jugador.id}, 1)" 
+                     style="cursor: pointer;">
 
-                            <img
-                                loading="lazy"
-                                src="${jugador.imagen_url || URL_IMAGEN_POR_DEFECTO}"
-                                alt="Estampa"
-                                onerror="cargarImagenPorDefecto(this)"
-                            >
+                    <img
+                        loading="lazy"
+                        src="${jugador.imagen_url || URL_IMAGEN_POR_DEFECTO}"
+                        alt="Estampa"
+                        onerror="cargarImagenPorDefecto(this)"
+                    >
 
-                        </div>
+                </div>
 
-                        <div class="card-controles-laterales">
+                <div class="card-controles-laterales">
 
-                            <button
-                                class="btn-control btn-sumar"
-                                onclick="cambiarCantidad(${jugador.id},1)">
-                                +
-                            </button>
+                    <button
+                        class="btn-control btn-sumar"
+                        onclick="cambiarCantidad(${jugador.id},1)">
+                        +
+                    </button>
 
                             <span
                                 class="existencia-numero"
