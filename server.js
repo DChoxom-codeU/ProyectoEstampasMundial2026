@@ -1,195 +1,552 @@
-const express = require('express');
-const cors = require('cors'); // 1. Importas el paquete
-const mysql = require('mysql2');
-const path = require('path');
-const app = express();
-const puertoServer = 5050; // Tu base de datos corre aquí
+//==========================================
+//IMPORTS
+//==========================================
 
-app.use(cors()); // <-- 2. ¡Activas CORS para darle permiso a Live Server!
+const express=require('express');
+const cors=require('cors');
+const mysql=require('mysql2');
+const path=require('path');
+
+const cloudinary=require('cloudinary').v2;
+
+
+//==========================================
+//APP
+//==========================================
+
+const app=express();
+const puertoServer=4545;
+
+
+//==========================================
+//MIDDLEWARES
+//==========================================
+
+app.use(cors());
 app.use(express.json());
-
-const cloudinary = require('cloudinary').v2;
-
-// Configura tus credenciales secretas (NUNCA las pongas en el HTML)
-cloudinary.config({ 
-  cloud_name: 'dn1tojwh2', 
-  api_key: '882288655611385', 
-  api_secret: 'o2VSM5PsUEjsoxkOprvzEDh1LzM' 
-});
-
-
-// CONFIGURACIÓN DE MYSQL
-const conexion = mysql.createConnection({
-    host: 'localhost',
-    port: 3306,
-    user: 'root',          
-    password: 'link',  
-    database: 'albumvirtualgestordata' 
-});
-
-conexion.connect((err) => {
-    if (err) {
-        console.error('❌ Error conectando a MySQL: ' + err.stack);
-        return;
-    }
-    console.log('✅ Conectado con éxito a MySQL en el puerto 3306');
-});
-
-// Servir archivo HTML automáticamente
 app.use(express.static(path.join(__dirname)));
 
-// 1. RUTA PARA OBTENER LAS ESTAMPAS (CON FILTROS CRUZADOS COMPLETOS)
-// RUTA ACTUALIZADA CON FILTROS DE ESTADO Y ORDENAMIENTO DINÁMICO
-app.get('/api/estampas', (req, res) => {
-    // Recibimos estado y orden desde el frontend
-    const { buscar, pais, tipo_id, estado, orden } = req.query;
-    
-    let query = `
-        SELECT estampas.*, paises.nombre_pais 
-        FROM estampas 
-        INNER JOIN paises ON estampas.pais_id = paises.id_pais 
+
+//==========================================
+//CLOUDINARY
+//==========================================
+
+cloudinary.config({
+    cloud_name:'dn1tojwh2',
+    api_key:'882288655611385',
+    api_secret:'o2VSM5PsUEjsoxkOprvzEDh1LzM'
+});
+
+
+//==========================================
+//MYSQL
+//==========================================
+
+const conexion=mysql.createConnection({
+    host:'kodama.proxy.rlwy.net',
+    port:35172,
+    user:'root',
+    password:'ejgWvsUPJfRpTIgzuFQDWYLrsDCrQnof',
+    database:'albumvirtualgestordata'
+});
+
+
+//==========================================
+//CONEXIÓN MYSQL
+//==========================================
+
+conexion.connect((err)=>{
+
+    if(err){
+
+        console.error(
+            '❌ Error conectando a MySQL:',
+            err
+        );
+
+        return;
+    }
+
+    console.log(
+        '✅ Conectado a MySQL correctamente'
+    );
+});
+
+
+//==========================================
+//RUTA ESTAMPAS
+//PAGINACIÓN + SCROLL INTERNO
+//==========================================
+
+app.get('/api/estampas',(req,res)=>{
+
+    const{
+        buscar,
+        pais,
+        tipo_id,
+        estado,
+        orden,
+        pagina=1,
+        limite=25,
+        offsetInterno=0,
+        maximoPagina=100
+    }=req.query;
+
+    //==========================================
+    //PARSEOS
+    //==========================================
+
+    const paginaNumero=parseInt(pagina);
+    const limiteNumero=parseInt(limite);
+    const offsetInternoNumero=parseInt(offsetInterno);
+    const maximoPaginaNumero=parseInt(maximoPagina);
+
+    //==========================================
+    //OFFSET REAL
+    //==========================================
+
+    const offsetReal=
+        ((paginaNumero-1)
+        *maximoPaginaNumero)
+        +offsetInternoNumero;
+
+    //==========================================
+    //WHERE SQL
+    //==========================================
+
+    let whereSQL=`
         WHERE 1=1
     `;
-    let parametros = [];
 
-    // 1. Filtro por Nombre
-    if (buscar) {
-        query += ' AND estampas.nombre LIKE ?';
+    let parametros=[];
+
+    //==========================================
+    //FILTRO NOMBRE
+    //==========================================
+
+    if(buscar){
+
+        whereSQL+=`
+            AND estampas.nombre LIKE ?
+        `;
+
         parametros.push(`%${buscar}%`);
     }
 
-    // 2. Filtro por País
-    if (pais) {
-        query += ' AND paises.nombre_pais = ?';
+    //==========================================
+    //FILTRO PAÍS
+    //==========================================
+
+    if(pais){
+
+        whereSQL+=`
+            AND paises.nombre_pais = ?
+        `;
         parametros.push(pais);
     }
 
-    // 3. Filtro por Tipo de Estampa
-    if (tipo_id) {
-        query += ' AND estampas.tipo_id = ?';
+    //==========================================
+    //FILTRO TIPO
+    //==========================================
+
+    if(tipo_id!==''){
+
+        whereSQL+=`
+            AND estampas.tipo_id = ?
+        `;
         parametros.push(tipo_id);
     }
 
-    // 🔥 4. NUEVO: Lógica inteligente para el Estado de Posesión
-    if (estado === 'no_tengo') {
-        query += ' AND estampas.cantidad_tengo = 0';
-    } else if (estado === 'tengo') {
-        query += ' AND estampas.cantidad_tengo > 0';
-    } else if (estado === 'repetidos') {
-        query += ' AND estampas.cantidad_tengo >= 2';
+    //==========================================
+    //FILTRO ESTADO
+    //==========================================
+
+    if(estado==='no_tengo'){
+
+        whereSQL+=`
+            AND estampas.cantidad_tengo = 0
+        `;
+    }
+    else if(estado==='tengo'){
+
+        whereSQL+=`
+            AND estampas.cantidad_tengo > 0
+        `;
+    }
+    else if(estado==='repetidos'){
+
+        whereSQL+=`
+            AND estampas.cantidad_tengo >= 2
+        `;
     }
 
-    // 🔥 5. NUEVO: Ordenamiento Seguro (Evita inyección SQL usando una lista blanca)
-    let ordenamientoSQL = 'ORDER BY estampas.numero_album ASC'; // Filtro por defecto siempre
+    //==========================================
+    //ORDENAMIENTO
+    //==========================================
 
-    if (orden === 'ultima_modificacion') {
-        // Asumiendo que tu columna de fecha se llama 'updated_at' o 'fecha_actualizacion'
-        // Cambia 'updated_at' por el nombre exacto que le pusiste en tu base de datos
-        ordenamientoSQL = 'ORDER BY estampas.updated_at DESC'; 
-    } else if (orden === 'nombre') {
-        ordenamientoSQL = 'ORDER BY estampas.nombre ASC';
+    let ordenamientoSQL=`
+        ORDER BY estampas.numero_album ASC
+    `;
+
+    if(orden==='ultima_modificacion'){
+
+        ordenamientoSQL=`
+            ORDER BY estampas.ultima_alteracion DESC
+        `;
+    }
+    else if(orden==='nombre'){
+
+        ordenamientoSQL=`
+            ORDER BY
+            estampas.nombre ASC,
+            estampas.numero_album ASC
+        `;
     }
 
-    // Acoplamos el ordenamiento seleccionado al final de la consulta
-    query += ` ${ordenamientoSQL}`;
+    //==========================================
+    //QUERY DATOS
+    //==========================================
 
-    // Ejecutamos la consulta
-    conexion.query(query, parametros, (error, resultados) => {
-        if (error) {
-            console.error("Error en la consulta de estampas:", error);
-            return res.status(500).json({ error: error.message });
-        }
-        res.json(resultados); 
-    });
-});
+    const queryDatos=`
 
-// 2. RUTA PARA ACTUALIZAR LA CANTIDAD EN LA BASE DE DATOS
-app.post('/api/estampas/actualizar', (req, res) => {
-    const { id, cantidad } = req.body;
+        SELECT
+            estampas.*,
+            paises.nombre_pais
 
-    if (!id || cantidad === undefined) {
-        return res.status(400).json({ error: "Faltan parámetros requeridos (id, cantidad)" });
-    }
+        FROM estampas
 
-    const query = 'UPDATE estampas SET cantidad_tengo = ? WHERE id = ?';
-    
-    conexion.query(query, [cantidad, id], (error, resultado) => {
-        if (error) {
-            console.error("Error al actualizar la base de datos:", error);
-            return res.status(500).json({ error: error.message });
-        }
-        res.json({ success: true, mensaje: "Cantidad actualizada correctamente" });
-    });
-});
+        INNER JOIN paises
+        ON estampas.pais_id = paises.id_pais
 
-// 3. RUTA PARA OBTENER LA LISTA DE PAÍSES (Para el <select>)
-app.get('/api/paises', (req, res) => {
-    // Corregido: Se cambia 'FROM pais' por 'FROM paises' en plural para coincidir con tu base de datos
-    const query = 'SELECT DISTINCT nombre_pais FROM paises WHERE nombre_pais IS NOT NULL ORDER BY nombre_pais ASC';
-    
-    conexion.query(query, (error, resultados) => {
-        if (error) {
-            console.error("Error al obtener países:", error);
-            return res.status(500).json({ error: error.message });
-        }
-        res.json(resultados);
-    });
-});
+        ${whereSQL}
 
-// RUTA PARA GUARDAR LA URL DE LA FOTO EN LA BASE DE DATOS
-// RUTA RESPALDADA POR FIRMA PARA SUBIR/ACTUALIZAR FOTO Y BORRAR LA VIEJA
-app.post('/api/estampas/agregar-foto', (req, res) => {
-    const { id, imagen_url } = req.body;
+        ${ordenamientoSQL}
 
-    if (!id || !imagen_url) {
-        return res.status(400).json({ error: "Faltan parámetros" });
-    }
+        LIMIT ?
 
-    // 1. Primero buscamos si el jugador ya tenía una foto guardada
-    const queryBuscarVieja = 'SELECT imagen_url FROM estampas WHERE id = ?';
+        OFFSET ?
+    `;
 
-    conexion.query(queryBuscarVieja, [id], (error, resultados) => {
-        if (!error && resultados.length > 0) {
-            const urlVieja = resultados[0].imagen_url;
+    const parametrosDatos=[
+        ...parametros,
+        limiteNumero,
+        offsetReal
+    ];
 
-            // Si tiene una URL válida de Cloudinary, procedemos a borrarla de su nube
-            if (urlVieja && urlVieja.includes('cloudinary.com')) {
-                try {
-                    // Extraemos el "Public ID" de la URL (el nombre único del archivo)
-                    const partesUrl = urlVieja.split('/');
-                    const nombreArchivoConExtension = partesUrl[partesUrl.length - 1];
-                    const publicIdViejo = nombreArchivoConExtension.split('.')[0]; // Quita el .jpg o .png
+    //==========================================
+    //QUERY TOTAL
+    //==========================================
 
-                    // 🌟 AQUÍ OCURRE LA MAGIA: Borrado automático y seguro usando la firma del Backend
-                    cloudinary.uploader.destroy(publicIdViejo, (err, result) => {
-                        if (err) console.error("No se pudo borrar la foto vieja de Cloudinary:", err);
-                        else console.log("🗑️ Foto vieja eliminada con éxito de Cloudinary:", result);
+    const queryTotal=`
+
+        SELECT
+            COUNT(*) AS total
+
+        FROM estampas
+
+        INNER JOIN paises
+        ON estampas.pais_id = paises.id_pais
+
+        ${whereSQL}
+    `;
+
+    //==========================================
+    //TOTAL REGISTROS
+    //==========================================
+
+    conexion.query(
+        queryTotal,
+        parametros,
+
+        (errorTotal,resultadoTotal)=>{
+
+            if(errorTotal){
+
+                console.error(errorTotal);
+
+                return res.status(500).json({
+                    error:errorTotal.message
+                });
+            }
+
+            const totalRegistros=
+                resultadoTotal[0].total;
+
+            const totalPaginas=
+                Math.ceil(
+                    totalRegistros
+                    /maximoPaginaNumero
+                );
+
+            //==========================================
+            //CONSULTA DATOS
+            //==========================================
+
+            conexion.query(
+                queryDatos,
+                parametrosDatos,
+
+                (errorDatos,resultados)=>{
+
+                    if(errorDatos){
+
+                        console.error(errorDatos);
+
+                        return res.status(500).json({
+                            error:errorDatos.message
+                        });
+                    }
+
+                    //==========================================
+                    //RESPUESTA
+                    //==========================================
+
+                    res.json({
+                        datos:resultados,
+                        totalPaginas,
+                        paginaActual:paginaNumero,
+                        totalRegistros
                     });
-                } catch (e) {
-                    console.error("Error al procesar el borrado de la imagen vieja:", e);
+                }
+            );
+        }
+    );
+});
+
+
+//==========================================
+//ACTUALIZAR CANTIDAD
+//==========================================
+
+app.post(
+    '/api/estampas/actualizar',
+    (req,res)=>{
+
+    const{
+        id,
+        cantidad
+    }=req.body;
+
+    if(
+        !id||
+        cantidad===undefined
+    ){
+
+        return res.status(400).json({
+            error:"Faltan parámetros"
+        });
+    }
+
+    const query=`
+        UPDATE estampas
+        SET cantidad_tengo = ?
+        WHERE id = ?
+    `;
+
+    conexion.query(
+        query,
+        [cantidad,id],
+
+        (error)=>{
+
+            if(error){
+                console.error(error);
+                return res.status(500).json({
+                    error:error.message
+                });
+            }
+
+            res.json({
+                success:true
+            });
+        }
+    );
+});
+
+
+//==========================================
+//OBTENER PAÍSES
+//==========================================
+
+app.get('/api/paises',(req,res)=>{
+
+    const query=`
+
+        SELECT DISTINCT
+            nombre_pais
+
+        FROM paises
+        WHERE nombre_pais IS NOT NULL
+        ORDER BY nombre_pais ASC
+    `;
+
+    conexion.query(
+        query,
+
+        (error,resultados)=>{
+
+            if(error){
+
+                console.error(error);
+
+                return res.status(500).json({
+                    error:error.message
+                });
+            }
+            res.json(resultados);
+        }
+    );
+});
+
+
+//==========================================
+//GUARDAR FOTO
+//==========================================
+
+app.post(
+    '/api/estampas/agregar-foto',
+    (req,res)=>{
+
+    const{
+        id,
+        imagen_url
+    }=req.body;
+
+    if(!id||!imagen_url){
+
+        return res.status(400).json({
+            error:"Faltan parámetros"
+        });
+    }
+
+    //==========================================
+    //BUSCAR FOTO VIEJA
+    //==========================================
+
+    const queryBuscar=`
+        SELECT imagen_url
+        FROM estampas
+        WHERE id = ?
+    `;
+
+    conexion.query(
+        queryBuscar,
+        [id],
+
+        (error,resultados)=>{
+
+            if(
+                !error&&
+                resultados.length>0
+            ){
+                const urlVieja=
+                    resultados[0].imagen_url;
+
+                //==========================================
+                //BORRAR FOTO VIEJA
+                //==========================================
+
+                if(
+                    urlVieja&&
+                    urlVieja.includes(
+                        'cloudinary.com'
+                    )
+                ){
+
+                    try{
+
+                        const partes=
+                            urlVieja.split('/');
+
+                        const archivo=
+                            partes[
+                                partes.length-1
+                            ];
+
+                        const publicId=
+                            archivo.split('.')[0];
+
+                        cloudinary.uploader.destroy(
+                            publicId,
+
+                            (err,result)=>{
+                                if(err){
+
+                                    console.error(
+                                        "❌ Error borrando foto:",
+                                        err
+                                    );
+                                }
+                                else{
+                                    console.log(
+                                        "🗑️ Foto vieja eliminada:",
+                                        result
+                                    );
+                                }
+                            }
+                        );
+                    }catch(e){
+                        console.error(e);
+                    }
                 }
             }
+
+            //==========================================
+            //GUARDAR NUEVA URL
+            //==========================================
+
+            const queryUpdate=`
+                UPDATE estampas
+                SET imagen_url = ?
+                WHERE id = ?
+            `;
+
+            conexion.query(
+                queryUpdate,
+                [imagen_url,id],
+
+                (errUpdate)=>{
+
+                    if(errUpdate){
+
+                        console.error(
+                            errUpdate
+                        );
+
+                        return res.status(500).json({
+                            error:errUpdate.message
+                        });
+                    }
+
+                    res.json({
+                        success:true,
+                        mensaje:"Foto actualizada"
+                    });
+                }
+            );
         }
-
-        // 2. Una vez que intentamos borrar la vieja, actualizamos la base de datos con la nueva URL
-        const queryUpdate = 'UPDATE estampas SET imagen_url = ? WHERE id = ?';
-        conexion.query(queryUpdate, [imagen_url, id], (errUpdate, resultado) => {
-            if (errUpdate) {
-                console.error("Error al guardar en MySQL:", errUpdate);
-                return res.status(500).json({ error: errUpdate.message });
-            }
-            res.json({ success: true, mensaje: "Foto actualizada y contenedor limpio." });
-        });
-    });
+    );
 });
 
 
+//==========================================
+//SERVIDOR
+//==========================================
 
-// Iniciar el servidor de forma correcta forzando IPv4
-app.listen(puertoServer, '0.0.0.0', (err) => {
-    if (err) {
-        console.error("❌ Error crítico al levantar el servidor:", err);
-        return;
+app.listen(
+    puertoServer,
+    '0.0.0.0',
+    (err)=>{
+        if(err){
+            console.error(
+                "❌ Error levantando servidor:",
+                err
+            );
+            return;
+        }
+        console.log(
+            `🚀 Servidor funcionando en:
+            http://localhost:${puertoServer}`
+        );
     }
-    console.log(`🚀 Servidor corriendo con éxito en http://localhost:${puertoServer}`);
-});
+);

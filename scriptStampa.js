@@ -1,263 +1,721 @@
-// --- CONTROL DEL MENÚ DESPLEGABLE EN MÓVIL ---
-document.addEventListener("DOMContentLoaded", () => {
-    const btnToggle = document.getElementById("btn-toggle-filtros");
-    const contenedorFiltros = document.getElementById("menu-filtros-contenedor");
-    const cuerpoDocumento = document.body;
+// ==========================================
+// VARIABLES GLOBALES
+// ==========================================
 
-    if (btnToggle && contenedorFiltros) {
-        btnToggle.addEventListener("click", () => {
-            // Alterna la clase para abrir el acordeón de los filtros
-            contenedorFiltros.classList.toggle("desplegado");
-            
-            // Alterna la clase en el body para empujar las tarjetas hacia abajo simultáneamente
-            cuerpoDocumento.classList.toggle("filtros-abiertos");
-            
-            // Cambio visual opcional en el botón
-            if (contenedorFiltros.classList.contains("desplegado")) {
-                btnToggle.innerHTML = "Cerrar ❌";
-            } else {
-                btnToggle.innerHTML = "Filtros ⚙️";
-            }
-        });
-    }
+let idJugadorActual = null;
+
+// ==========================================
+// PAGINACIÓN PRINCIPAL
+// ==========================================
+
+let paginaActual = 1;
+let totalPaginas = 1;
+
+// Máximo REAL por página
+let maximoPorPagina = 100;
+
+// Cantidad que se carga cada vez al bajar
+const BLOQUE_SCROLL = 25;
+
+// Offset interno dentro de la página
+let offsetInterno = 0;
+
+// Control
+let cargandoEstampas = false;
+let finScrollInterno = false;
+
+// URL imagen default
+const URL_IMAGEN_POR_DEFECTO =
+"https://res.cloudinary.com/dn1tojwh2/image/upload/v1779081425/defaul_estampa_zz36be.jpg";
+
+
+// ==========================================
+// DOM READY
+// ==========================================
+
+document.addEventListener("DOMContentLoaded", () => {
+    configurarMenuFiltros();
+    configurarEventos();
+    
+    configurarPaginacion();
+    iniciarApp();
+
 });
 
 
-// Imagen por defecto si el jugador no tiene foto cargada
-const URL_IMAGEN_POR_DEFECTO = "https://res.cloudinary.com/dn1tojwh2/image/upload/v1779081425/defaul_estampa_zz36be.jpg"; 
+// ==========================================
+// MENÚ FILTROS
+// ==========================================
 
-// Manejo de errores para las imágenes
-function cargarImagenPorDefecto(imagenElemento) {
-    if (!imagenElemento.src || imagenElemento.src === window.location.href || imagenElemento.src.includes('null') || imagenElemento.src === "") {
-        imagenElemento.src = URL_IMAGEN_POR_DEFECTO;
+function configurarMenuFiltros() {
+
+    const btnToggle =
+        document.getElementById("btn-toggle-filtros");
+
+    const contenedorFiltros =
+        document.getElementById("menu-filtros-contenedor");
+
+    if (!btnToggle || !contenedorFiltros) return;
+
+    btnToggle.addEventListener("click", () => {
+
+        contenedorFiltros.classList.toggle("desplegado");
+
+        document.body.classList.toggle("filtros-abiertos");
+
+        btnToggle.innerHTML =
+            contenedorFiltros.classList.contains("desplegado")
+            ? "Cerrar ❌"
+            : "Filtros ⚙️";
+    });
+}
+
+
+// ==========================================
+// EVENTOS
+
+
+function configurarEventos() {
+
+    // INPUT ARCHIVO
+    const inputArchivo =
+        document.getElementById('input-archivo-oculto');
+
+    if (inputArchivo) {
+
+        inputArchivo.addEventListener(
+            'change',
+            subirImagenJugador
+        );
     }
-    imagenElemento.onerror = function() {
-        imagenElemento.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='100' height='100' viewBox='0 0 100 100'><rect width='100%' height='100%' fill='%23ccc'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' font-family='sans-serif' font-size='10' fill='%23666'>Sin Foto</text></svg>";
+
+    // FILTROS
+    agregarEventoSiExiste('filtro-pais', 'change');
+    agregarEventoSiExiste('buscador-nombre', 'input');
+    agregarEventoSiExiste('filtroTipo', 'change');
+    agregarEventoSiExiste('filtroEstado', 'change');
+    agregarEventoSiExiste('ordenarPor', 'change');
+    agregarEventoSiExiste(
+        'selector-cantidad-pagina',
+        'change'
+    );
+
+    // ==========================================
+    // SCROLL LIMITADO INTERNO
+
+
+    let timeoutScroll;
+
+    window.addEventListener('scroll', () => {
+
+        clearTimeout(timeoutScroll);
+
+        timeoutScroll = setTimeout(() => {
+
+            const {
+                scrollTop,
+                scrollHeight,
+                clientHeight
+            } = document.documentElement;
+
+            if (
+                scrollTop + clientHeight >= scrollHeight - 150 &&
+                !cargandoEstampas &&
+                !finScrollInterno
+            ) {
+
+                offsetInterno += BLOQUE_SCROLL;
+
+                cargarEstampasDesdeBaseDatos(false);
+            }
+
+        }, 120);
+    });
+}
+
+
+function agregarEventoSiExiste(id, evento) {
+
+ const elemento = document.getElementById(id);
+    if (!elemento) return;
+
+    elemento.addEventListener(evento, () => {
+
+        paginaActual = 1;
+
+        reiniciarPagina();
+    });
+}
+
+
+// ==========================================
+// PAGINACIÓN
+// ==========================================
+
+function configurarPaginacion() {
+
+    const btnAnterior = document.getElementById('btn-pagina-anterior');
+ const btnSiguiente =  document.getElementById('btn-pagina-siguiente');
+
+    // BOTÓN ANTERIOR
+    if (btnAnterior) {
+
+        btnAnterior.addEventListener('click', () => {
+
+            if (paginaActual <= 1) return;
+
+            paginaActual--;
+
+            reiniciarPagina();
+        });
+    }
+
+    // BOTÓN SIGUIENTE
+    if (btnSiguiente) {
+
+        btnSiguiente.addEventListener('click', () => {
+
+            if (paginaActual >= totalPaginas) return;
+
+            paginaActual++;
+
+            reiniciarPagina();
+        });
+    }
+}
+
+
+// ==========================================
+// REINICIAR PÁGINA
+// ==========================================
+
+function reiniciarPagina() {
+    offsetInterno = 0;
+    finScrollInterno = false;
+    cargarEstampasDesdeBaseDatos(true);
+    window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+    });
+}
+
+
+// ==========================================
+// ACTUALIZAR UI PAGINACIÓN
+// ==========================================
+
+function actualizarUIpaginacion() {
+
+    const texto = document.getElementById('texto-pagina-actual');
+    const btnAnterior = document.getElementById('btn-pagina-anterior');
+    const btnSiguiente = document.getElementById('btn-pagina-siguiente');
+
+    // TEXTO
+    if (texto) {
+
+        texto.textContent =
+            `Página ${paginaActual} de ${totalPaginas}`;
+    }
+
+    // BOTÓN ANTERIOR
+    if (btnAnterior) {
+
+        btnAnterior.disabled =
+            paginaActual <= 1;
+    }
+
+    // BOTÓN SIGUIENTE
+    if (btnSiguiente) {
+
+        btnSiguiente.disabled =
+            paginaActual >= totalPaginas;
+    }
+}
+
+
+// ==========================================
+// IMAGEN DEFAULT
+// ==========================================
+
+function cargarImagenPorDefecto(img) {
+
+    if (
+        !img.src ||
+        img.src.includes('null') ||
+        img.src === ""
+    ) {
+
+        img.src = URL_IMAGEN_POR_DEFECTO;
+    }
+
+    img.onerror = () => {
+
+        img.src = URL_IMAGEN_POR_DEFECTO;
     };
 }
 
-// Función para sumar o restar la cantidad de una estampa
-async function cambiarCantidad(idJugador, cambio) {
-    const numeroContador = document.getElementById(`cant-${idJugador}`);
-    let valorActual = parseInt(numeroContador.innerText);
-    
-    valorActual += cambio;
-    if (valorActual < 0) valorActual = 0; // Evita que baje de cero
 
-    // Cambia el número en la pantalla inmediatamente para que sea rápido
-    numeroContador.innerText = valorActual;
+// ==========================================
+// CAMBIAR CANTIDAD
+// ==========================================
+
+async function cambiarCantidad(idJugador, cambio) {
+
+    const contador =
+        document.getElementById(`cant-${idJugador}`);
+
+    if (!contador) return;
+
+    let valorActual =
+        parseInt(contador.innerText) || 0;
+
+    valorActual += cambio;
+
+    if (valorActual < 0) {
+        valorActual = 0;
+    }
+
+    contador.innerText = valorActual;
 
     try {
-        // Guarda el cambio de forma permanente en la base de datos (Ruta limpia)
-        const respuesta = await fetch('/api/estampas/actualizar', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: idJugador, cantidad: valorActual })
-        });
-        
-        const resultado = await respuesta.json();
+        const respuesta =
+            await fetch('/api/estampas/actualizar', {
+
+                method: 'POST',
+
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+
+                body: JSON.stringify({
+                    id: idJugador,
+                    cantidad: valorActual
+                })
+            });
+
         if (!respuesta.ok) {
-            alert("No se pudo guardar en la base de datos: " + resultado.error);
+
+            throw new Error(
+                "Error actualizando cantidad"
+            );
         }
+
     } catch (error) {
-        console.error("Error guardando datos:", error);
-        alert("Error de conexión con el servidor.");
+        console.error(error);
+        alert("Error guardando cantidad.");
     }
 }
 
-// Variable global temporal para saber a qué jugador le estamos subiendo la foto
-let idJugadorActual = null;
 
-// 1. Esta función activa el input oculto al presionar el botón de la tarjeta
+// ==========================================
+// SELECCIONAR FOTO
+// ==========================================
+
 function seleccionarFoto(idJugador) {
     idJugadorActual = idJugador;
-    document.getElementById('input-archivo-oculto').click();
+
+    const input =
+        document.getElementById(
+            'input-archivo-oculto'
+        );
+
+    if (input) {
+
+        input.click();
+    }
 }
 
-// 2. Escuchador que detecta cuando el usuario selecciona una imagen de su PC
-document.getElementById('input-archivo-oculto').addEventListener('change', async function(e) {
+
+// ==========================================
+// SUBIR IMAGEN
+// ==========================================
+
+async function subirImagenJugador(e) {
+
     const archivoOriginal = e.target.files[0];
+
     if (!archivoOriginal || !idJugadorActual) return;
 
-    const CLOUD_NAME = "dn1tojwh2"; 
-    const UPLOAD_PRESET = "estampas_preset"; 
-
-    alert("Subiendo imagen... Reemplazando versión anterior en la nube.");
-
-    // 🌟 EL TRUCO: Creamos un nuevo archivo en memoria y lo renombramos usando el ID del jugador
-    const extension = archivoOriginal.name.split('.').pop(); // Guarda si es .jpg, .png, etc.
-    const archivoRenombrado = new File([archivoOriginal], `jugador_${idJugadorActual}.${extension}`, {
-        type: archivoOriginal.type
-    });
-
-    // Preparamos el envío para Cloudinary
-    const formData = new FormData();
-    formData.append('file', archivoRenombrado); // Enviamos el archivo con el nombre controlado
-    formData.append('upload_preset', UPLOAD_PRESET);
-
     try {
-        // Enviar directamente a Cloudinary
-        const respuestaCloudinary = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
-            method: 'POST',
-            body: formData
-        });
 
-        const datosCloudinary = await respuestaCloudinary.json();
+        const CLOUD_NAME = "dn1tojwh2";
+        const UPLOAD_PRESET = "estampas_preset";
+        const extension =
+            archivoOriginal.name.split('.').pop();
+        const archivoRenombrado = new File(
+            [archivoOriginal],
+            `jugador_${idJugadorActual}.${extension}`,
+            {
+                type: archivoOriginal.type
+            }
+        );
+
+        const formData = new FormData();
+
+        formData.append(
+            'file',
+            archivoRenombrado
+        );
+
+        formData.append(
+            'upload_preset',
+            UPLOAD_PRESET
+        );
+
+        const respuestaCloudinary =
+            await fetch(
+                `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+                {
+                    method: 'POST',
+                    body: formData
+                }
+            );
+
+        const datos =
+            await respuestaCloudinary.json();
 
         if (!respuestaCloudinary.ok) {
-            throw new Error(datosCloudinary.error?.message || "Error al subir a Cloudinary");
+
+            throw new Error(
+                datos.error?.message
+            );
         }
 
-        // Cloudinary nos da la URL (que siempre tendrá el mismo ID público adentro)
-        const urlImagenFormateada = datosCloudinary.secure_url;
+        const imagenURL = datos.secure_url;
 
-        // Avisamos a nuestro backend de Node.js para que actualice MySQL
-        const respuestaBackend = await fetch('/api/estampas/agregar-foto', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ id: idJugadorActual, imagen_url: urlImagenFormateada })
-        });
+        const respuestaBackend =
+            await fetch(
+                '/api/estampas/agregar-foto',
+                {
+                    method: 'POST',
 
-        if (respuestaBackend.ok) {
-            alert("¡Foto actualizada con éxito! Se ha reemplazado el archivo anterior.");
-            
-            // Actualizamos la imagen en la pantalla al instante
-            const tarjetaImagen = document.querySelector(`button[onclick="seleccionarFoto(${idJugadorActual})"]`)
-                                          .closest('.card')
-                                          .querySelector('img');
-            if (tarjetaImagen) {
-                // Le agregamos un número al azar al final de la URL para romper la caché del navegador
-                tarjetaImagen.src = urlImagenFormateada + '?v=' + new Date().getTime();
-            }
-        } else {
-            alert("Error al registrar en la base de datos.");
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+
+                    body: JSON.stringify({
+                        id: idJugadorActual,
+                        imagen_url: imagenURL
+                    })
+                }
+            );
+
+        if (!respuestaBackend.ok) {
+
+            throw new Error(
+                "Error guardando BD"
+            );
         }
+
+        // ACTUALIZAR IMAGEN
+        const img = document.querySelector(
+            `button[onclick="seleccionarFoto(${idJugadorActual})"]`
+        )?.closest('.card')
+         ?.querySelector('img');
+
+        if (img) {
+
+            img.src =
+                `${imagenURL}?v=${Date.now()}`;
+        }
+
+        alert("Imagen actualizada.");
 
     } catch (error) {
-        console.error("Error en el proceso:", error);
-        alert("Ocurrió un error: " + error.message);
+        console.error(error);
+        alert(error.message);
+
     } finally {
         e.target.value = "";
         idJugadorActual = null;
     }
-});
+}
 
-// Función para llenar el desplegable con los países
+
+// ==========================================
+// CARGAR PAÍSES
+// ==========================================
+
 async function cargarPaisesFiltro() {
-    try {
-        const respuesta = await fetch('/api/paises');
-        const paises = await respuesta.json();
-        const selector = document.getElementById('filtro-pais');
 
-        selector.innerHTML = '<option value="">Sin filtro de pais</option>';
-        
-        paises.forEach(p => {
-            if (p.nombre_pais) {
-                selector.innerHTML += `<option value="${p.nombre_pais}">${p.nombre_pais}</option>`;
-            }
+    try {
+
+        const respuesta =
+            await fetch('/api/paises');
+
+        const paises =
+            await respuesta.json();
+
+        const selector =
+            document.getElementById(
+                'filtro-pais'
+            );
+
+        if (!selector) return;
+
+        selector.innerHTML =
+            '<option value="">Sin filtro de país</option>';
+
+        paises.forEach(pais => {
+
+            if (!pais.nombre_pais) return;
+
+            selector.insertAdjacentHTML(
+                'beforeend',
+                `
+                <option value="${pais.nombre_pais}">
+                    ${pais.nombre_pais}
+                </option>
+                `
+            );
         });
+
     } catch (error) {
-        console.error("Error cargando la lista de países:", error);
+        console.error(error);
     }
 }
 
-// Función central para cargar los jugadores aplicando absolutamente todos los filtros activos
-async function cargarEstampasDesdeBaseDatos() {
+
+// ==========================================
+// CARGAR ESTAMPAS
+// ==========================================
+
+async function cargarEstampasDesdeBaseDatos(
+    esNuevaBusqueda = true
+) {
+
+    if (cargandoEstampas) return;
+    cargandoEstampas = true;
+
+    const loader =
+        document.getElementById(
+            'loader-infinito'
+        );
+
+    if (loader) {
+        loader.style.display = 'block';
+    }
+
     try {
-        const busqueda = document.getElementById('buscador-nombre').value;
-        const paisSeleccionado = document.getElementById('filtro-pais').value;
-        const tipoId = document.getElementById('filtroTipo')?.value || '';
-        
-        // 🔥 Capturamos las nuevas opciones de los comboboxes
-        const estado = document.getElementById('filtroEstado')?.value || '';
-        const orden = document.getElementById('ordenarPor')?.value || 'numero_album';
 
-        // Enviamos los nuevos parámetros "estado" y "orden" al backend
-        const url = `/api/estampas?buscar=${encodeURIComponent(busqueda)}&pais=${encodeURIComponent(paisSeleccionado)}&tipo_id=${encodeURIComponent(tipoId)}&estado=${encodeURIComponent(estado)}&orden=${encodeURIComponent(orden)}`;
-        
+        // RESET
+        if (esNuevaBusqueda) {
+            offsetInterno = 0;
+            finScrollInterno = false;
+        }
+
+        const grid =
+            document.getElementById(
+                'grid-jugadores'
+            );
+
+        if (!grid) return;
+
+        // ==========================================
+        // FILTROS
+        // ==========================================
+
+        const busqueda =
+            document.getElementById(
+                'buscador-nombre'
+            )?.value || '';
+
+        const pais =
+            document.getElementById(
+                'filtro-pais'
+            )?.value || '';
+
+        const tipo =
+            document.getElementById(
+                'filtroTipo'
+            )?.value || '';
+
+        const estado =
+            document.getElementById(
+                'filtroEstado'
+            )?.value || '';
+
+        const orden =
+            document.getElementById(
+                'ordenarPor'
+            )?.value || 'numero_album';
+
+        // ==========================================
+        // MÁXIMO POR PÁGINA
+        // ==========================================
+
+        maximoPorPagina =
+            parseInt(
+                document.getElementById(
+                    'selector-cantidad-pagina'
+                )?.value
+            ) || 100;
+
+        // ==========================================
+        // URL
+        // ==========================================
+
+        const url =
+            `/api/estampas`
+            + `?buscar=${encodeURIComponent(busqueda)}`
+            + `&pais=${encodeURIComponent(pais)}`
+            + `&tipo_id=${encodeURIComponent(tipo)}`
+            + `&estado=${encodeURIComponent(estado)}`
+            + `&orden=${encodeURIComponent(orden)}`
+            + `&pagina=${paginaActual}`
+            + `&limite=${BLOQUE_SCROLL}`
+            + `&offsetInterno=${offsetInterno}`
+            + `&maximoPagina=${maximoPorPagina}`;
+
         const respuesta = await fetch(url);
-        const estampas = await respuesta.json();
-        const grid = document.getElementById('grid-jugadores');
-        
-        grid.innerHTML = ''; 
 
-        if (estampas.length === 0) {
-            grid.innerHTML = '<p style="grid-column: 1/-1; text-align: center; color: #666; padding: 40px;">No se encontraron estampas con esos filtros.</p>';
+        const resultado = await respuesta.json();
+
+        // Backend debe devolver:
+        // {
+        //   datos: [],
+        //   totalPaginas: 4
+        // }
+
+        const estampas =
+            resultado.datos || [];
+
+        totalPaginas =
+            resultado.totalPaginas || 1;
+
+        // ==========================================
+        // LIMPIAR GRID
+        // ==========================================
+
+        if (esNuevaBusqueda) {
+
+            grid.innerHTML = '';
+        }
+
+        // ==========================================
+        // FIN SCROLL
+        // ==========================================
+
+        if (
+            estampas.length < BLOQUE_SCROLL ||
+            offsetInterno + BLOQUE_SCROLL >= maximoPorPagina
+        ) {
+            finScrollInterno = true;
+        }
+
+        // ==========================================
+        // SIN RESULTADOS
+        // ==========================================
+
+        if (
+            esNuevaBusqueda &&
+            estampas.length === 0
+        ) {
+
+            grid.innerHTML = `
+                <p style="
+                    text-align:center;
+                    padding:40px;
+                    color:#666;
+                ">
+                    No se encontraron estampas.
+                </p>
+            `;
+            actualizarUIpaginacion();
             return;
         }
 
-        
+        // ==========================================
+        // RENDER
+        // ==========================================
+
         estampas.forEach(jugador => {
-    const srcImagen = jugador.imagen_url ? jugador.imagen_url : "";
+            const html = `
+                <div class="card">
+                    <div class="card-bloque-superior">
+                        <div class="card-imagen-wrapper">
 
-    grid.innerHTML += `
-        <div class="card">
-            <!-- CONTENEDOR PRINCIPAL: Foto a la izquierda, controles a la derecha -->
-            <div class="card-bloque-superior">
-                <div class="card-imagen-wrapper">
-                    <img src="${srcImagen}" alt="Estampa" onerror="cargarImagenPorDefecto(this)">
-                </div>
-                
-                <!-- CONTROLES LATERALES VERTICALES -->
-                <div class="card-controles-laterales">
-                    <button class="btn-control btn-sumar" onclick="cambiarCantidad(${jugador.id}, 1)">+</button>
-                    <span class="existencia-numero" id="cant-${jugador.id}">${jugador.cantidad_tengo}</span>
-                    <button class="btn-control btn-restar" onclick="cambiarCantidad(${jugador.id}, -1)">-</button>
-                    
-                    <button class="btn-subir-imagen-icono" onclick="seleccionarFoto(${jugador.id})" title="Agregar Foto">📷</button>
-                </div>
-            </div>
+                            <img
+                                loading="lazy"
+                                src="${jugador.imagen_url || URL_IMAGEN_POR_DEFECTO}"
+                                alt="Estampa"
+                                onerror="cargarImagenPorDefecto(this)"
+                            >
 
-            <!-- INFORMACIÓN ABAJO -->
-            <div class="card-info-inferior">
-                <div class="jugador-nombre">${jugador.nombre}</div>
-                <div class="jugador-pais">📍 ${jugador.nombre_pais || "Sin País"} - ${jugador.numero_album}</div>
-            </div>
-        </div>
-    `;
-});
+                        </div>
+
+                        <div class="card-controles-laterales">
+
+                            <button
+                                class="btn-control btn-sumar"
+                                onclick="cambiarCantidad(${jugador.id},1)">
+                                +
+                            </button>
+
+                            <span
+                                class="existencia-numero"
+                                id="cant-${jugador.id}">
+                                ${jugador.cantidad_tengo}
+                            </span>
+
+                            <button
+                                class="btn-control btn-restar"
+                                onclick="cambiarCantidad(${jugador.id},-1)">
+                                -
+                            </button>
+
+                            <button
+                                class="btn-subir-imagen-icono"
+                                onclick="seleccionarFoto(${jugador.id})">
+                                📷
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="card-info-inferior">
+
+                        <div class="jugador-nombre">
+                            ${jugador.nombre}
+                        </div>
+
+                        <div class="jugador-pais">
+                            📍 ${jugador.nombre_pais || 'Sin País'}
+                            - ${jugador.numero_album}
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            grid.insertAdjacentHTML(
+                'beforeend',
+                html
+            );
+        });
+
+        // ==========================================
+        // ACTUALIZAR UI
+        // ==========================================
+
+        actualizarUIpaginacion();
 
     } catch (error) {
-        console.error("Error cargando estampas:", error);
+        console.error(error);
+
+    } finally {
+        cargandoEstampas = false;
+
+        if (loader) {
+            loader.style.display = 'none';
+        }
     }
 }
 
-// Escuchadores de eventos actualizados para incluir los nuevos comboboxes
-document.getElementById('filtro-pais').addEventListener('change', cargarEstampasDesdeBaseDatos);
-document.getElementById('buscador-nombre').addEventListener('input', cargarEstampasDesdeBaseDatos);
 
-if (document.getElementById('filtroTipo')) {
-    document.getElementById('filtroTipo').addEventListener('change', cargarEstampasDesdeBaseDatos);
-}
+// ==========================================
+// INICIAR APP
+// ==========================================
 
-// 🔥 Escuchadores nuevos
-if (document.getElementById('filtroEstado')) {
-    document.getElementById('filtroEstado').addEventListener('change', cargarEstampasDesdeBaseDatos);
-}
-if (document.getElementById('ordenarPor')) {
-    document.getElementById('ordenarPor').addEventListener('change', cargarEstampasDesdeBaseDatos);
-}
-
-// Escuchadores de eventos para recargar las estampas automáticamente cuando cambie cualquier filtro
-document.getElementById('filtro-pais').addEventListener('change', cargarEstampasDesdeBaseDatos);
-document.getElementById('buscador-nombre').addEventListener('input', cargarEstampasDesdeBaseDatos);
-
-// Escuchadores de seguridad para los nuevos filtros (se activan solo si existen en el HTML)
-const elFiltroTipo = document.getElementById('filtroTipo');
-if (elFiltroTipo) {
-    elFiltroTipo.addEventListener('change', cargarEstampasDesdeBaseDatos);
-}
-
-const elFiltroCantidad = document.getElementById('filtroCantidad');
-if (elFiltroCantidad) {
-    elFiltroCantidad.addEventListener('input', cargarEstampasDesdeBaseDatos);
-}
-
-// Función inicializadora para arrancar la app en orden
 async function iniciarApp() {
-    await cargarPaisesFiltro();          
-    await cargarEstampasDesdeBaseDatos(); 
+    await cargarPaisesFiltro();
+    await cargarEstampasDesdeBaseDatos(true);
 }
-
-// Arrancamos la aplicación
-iniciarApp();
