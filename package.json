@@ -1,4 +1,11 @@
 {
+  "name": "album-virtual-mundial-2026",
+  "version": "1.0.0",
+  "description": "Servidor para mi álbum virtual de estampas",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
   "dependencies": {
     "cloudinary": "^2.10.0",
     "cors": "^2.8.6",
