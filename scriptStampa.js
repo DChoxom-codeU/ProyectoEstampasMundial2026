@@ -332,25 +332,25 @@ function seleccionarFoto(idJugador) {
 
 async function subirImagenJugador(e) {
 
-    const archivoOriginal = e.target.files[0];
+const archivoOriginal = e.target.files[0];
+if (!archivoOriginal || !idJugadorActual) return;
 
-    if (!archivoOriginal || !idJugadorActual) return;
+try {
+    const CLOUD_NAME = "dn1tojwh2";
+    const UPLOAD_PRESET = "estampas_preset";
+    
+    // 🌟 CAMBIO AQUÍ: Detectamos la extensión de forma más segura para Android
+    let extension = archivoOriginal.name.split('.').pop().toLowerCase();
+    if (extension === 'jpeg' || !extension) extension = 'jpg'; 
 
-    try {
+    // Creamos el archivo con un nombre limpio y plano
+    const archivoRenombrado = new File(
+        [archivoOriginal],
+        `jugador_${idJugadorActual}.${extension}`,
+        { type: archivoOriginal.type }
+    );
 
-        const CLOUD_NAME = "dn1tojwh2";
-        const UPLOAD_PRESET = "estampas_preset";
-        const extension =
-            archivoOriginal.name.split('.').pop();
-        const archivoRenombrado = new File(
-            [archivoOriginal],
-            `jugador_${idJugadorActual}.${extension}`,
-            {
-                type: archivoOriginal.type
-            }
-        );
-
-        const formData = new FormData();
+    const formData = new FormData();
 
         formData.append(
             'file',
