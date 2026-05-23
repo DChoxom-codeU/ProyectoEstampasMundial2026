@@ -320,44 +320,47 @@ app.get('/api/estampas',(req,res)=>{
 
 app.post(
     '/api/estampas/actualizar',
-    (req,res)=>{
+    (req, res) => {
 
-    const{
+    const {
         id,
         cantidad
-    }=req.body;
+    } = req.body;
 
-    if(
-        !id||
-        cantidad===undefined
-    ){
+    if (
+        !id ||
+        cantidad === undefined
+    ) {
 
         return res.status(400).json({
-            error:"Faltan parámetros"
+            error: "Faltan parámetros"
         });
     }
 
-    const query=`
+    // 🌟 AQUÍ SE HIZO EL AJUSTE: Añadimos la columna y la función NOW() de MySQL
+    const query = `
         UPDATE estampas
-        SET cantidad_tengo = ?
+        SET cantidad_tengo = ?,
+            ultima_alteracion = NOW()
         WHERE id = ?
     `;
 
+    // Los parámetros del arreglo se quedan exactamente igual: [cantidad, id]
     conexion.query(
         query,
-        [cantidad,id],
+        [cantidad, id],
 
-        (error)=>{
+        (error) => {
 
-            if(error){
+            if (error) {
                 console.error(error);
                 return res.status(500).json({
-                    error:error.message
+                    error: error.message
                 });
             }
 
             res.json({
-                success:true
+                success: true
             });
         }
     );
