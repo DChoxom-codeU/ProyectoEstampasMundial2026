@@ -55,26 +55,19 @@ conexion.connect((err) => {
 // RUTA ESTAMPAS - PAGINACIÓN + SCROLL INTERNO
 //==============================================================================
 app.get('/api/estampas', (req, res) => {
-    const {
-        buscar,
-        pais,
-        tipo_id, // Viene de la URL externa
-        estado,
-        orden,
-        pagina = 1,
-        limite = 25,
-        offsetInterno = 0,
-        maximoPagina = 100
-    } = req.query;
+  const {
+    buscar,
+    pais,
+    tipo_id,
+    estado,
+    orden,
+    limite = 100,
+    offset = 0
+} = req.query;
 
-    // Parseos numéricos
-    const paginaNumero = parseInt(pagina);
-    const limiteNumero = parseInt(limite);
-    const offsetInternoNumero = parseInt(offsetInterno);
-    const maximoPaginaNumero = parseInt(maximoPagina);
 
-    // Cálculo del Offset Real
-    const offsetReal = ((paginaNumero - 1) * maximoPaginaNumero) + offsetInternoNumero;
+const limiteNumero = parseInt(limite);
+const offsetNumero = parseInt(offset);
 
     // 🌟 CORRECCIÓN: Filtros adaptados a los nombres reales de tus columnas
     let whereSQL = ` WHERE 1=1 `;
@@ -124,7 +117,11 @@ app.get('/api/estampas', (req, res) => {
         INNER JOIN paises ON estampas.id_pais = paises.id_pais
         ${whereSQL}
         ${ordenamientoSQL}
-        LIMIT ? OFFSET ?
+    const parametrosDatos = [
+    ...parametros,
+    limiteNumero,
+    offsetNumero
+];
     `;
 
     const parametrosDatos = [...parametros, limiteNumero, offsetReal];

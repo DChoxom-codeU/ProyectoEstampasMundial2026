@@ -8,17 +8,14 @@ let idJugadorActual = null;
 // PAGINACIÓN PRINCIPAL
 // ==========================================
 
-let paginaActual = 1;
-let totalPaginas = 1;
 
-// Máximo REAL por página
-let maximoPorPagina = 100;
+
 
 // Cantidad que se carga cada vez al bajar
-const BLOQUE_SCROLL = 25;
+let LIMITE_CARGA = 100;
 
 // Offset interno dentro de la página
-let offsetInterno = 0;
+let offsetActual = 0;
 
 // Control
 let cargandoEstampas = false;
@@ -76,6 +73,26 @@ function configurarMenuFiltros() {
 
 function configurarEventos() {
 
+
+    const selectorCantidad =
+document.getElementById(
+    'selector-cantidad-pagina'
+);
+
+if (selectorCantidad) {
+
+    selectorCantidad.addEventListener(
+        'change',
+        () => {
+
+            LIMITE_CARGA =
+            parseInt(selectorCantidad.value) || 100;
+
+            reiniciarBusqueda();
+        }
+    );
+}
+
     // INPUT ARCHIVO
     const inputArchivo =
         document.getElementById('input-archivo-oculto');
@@ -120,7 +137,7 @@ function configurarEventos() {
                 !finScrollInterno
             ) {
 
-                offsetInterno += BLOQUE_SCROLL;
+            offsetActual += LIMITE_CARGA;
 
                 cargarEstampasDesdeBaseDatos(false);
             }
@@ -139,7 +156,7 @@ function agregarEventoSiExiste(id, evento) {
 
         paginaActual = 1;
 
-        reiniciarPagina();
+     reiniciarBusqueda();
     });
 }
 
@@ -185,16 +202,19 @@ function configurarPaginacion() {
 // REINICIAR PÁGINA
 // ==========================================
 
-function reiniciarPagina() {
-    offsetInterno = 0;
+function reiniciarBusqueda() {
+
+    offsetActual = 0;
+
     finScrollInterno = false;
+
     cargarEstampasDesdeBaseDatos(true);
+
     window.scrollTo({
         top: 0,
         behavior: 'smooth'
     });
 }
-
 
 // ==========================================
 // ACTUALIZAR UI PAGINACIÓN
@@ -449,10 +469,8 @@ async function cargarEstampasDesdeBaseDatos(esNuevaBusqueda = true) {
             + `&tipo_id=${encodeURIComponent(tipo)}`
             + `&estado=${encodeURIComponent(estado)}`
             + `&orden=${encodeURIComponent(orden)}`
-            + `&pagina=${paginaActual}`
-            + `&limite=${BLOQUE_SCROLL}`
-            + `&offsetInterno=${offsetInterno}`
-            + `&maximoPagina=${maximoPorPagina}`;
+        + `&limite=${LIMITE_CARGA}`
++ `&offset=${offsetActual}`;
 
         const respuesta = await fetch(url);
         const resultado = await respuesta.json();
@@ -464,10 +482,8 @@ async function cargarEstampasDesdeBaseDatos(esNuevaBusqueda = true) {
             grid.innerHTML = '';
         }
 
-        if (
-            estampas.length < BLOQUE_SCROLL ||
-            offsetInterno + BLOQUE_SCROLL >= maximoPorPagina
-        ) {
+       if (estampas.length < LIMITE_CARGA)
+        {
             finScrollInterno = true;
         }
 
