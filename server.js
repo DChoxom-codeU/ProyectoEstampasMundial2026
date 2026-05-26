@@ -52,81 +52,46 @@ conexion.connect((err) => {
 });
 
 //==============================================================================
-// RUTA ESTAMPAS - PAGINACIÓN + SCROLL INTERNO
+// RUTA ESTAMPAS - PAGINACIÓN + SCROLL INTERNO (CORREGIDA)
 //==============================================================================
 app.get('/api/estampas', (req, res) => {
-  const {
-    buscar,
-    pais,
-    tipo_id,
-    estado,
-    orden,
-    limite = 100,
-    offset = 0
-} = req.query;
+    const { buscar, pais, tipo_id, estado, orden, pagina, limite, offsetInterno, maximoPagina } = req.query;
 
+    const limiteNumero = parseInt(limite) || 25;
+    const paginaNumero = parseInt(pagina) || 1;
+    const offsetInternoNum = parseInt(offsetInterno) || 0;
+    const maximoPaginaNumero = parseInt(maximoPagina) || 100;
 
-const limiteNumero = parseInt(limite);
-const offsetNumero = parseInt(offset);
+    // Cálculo del offset real para SQL
+    const offsetReal = ((paginaNumero - 1) * maximoPaginaNumero) + offsetInternoNum;
 
-    // 🌟 CORRECCIÓN: Filtros adaptados a los nombres reales de tus columnas
     let whereSQL = ` WHERE 1=1 `;
     let parametros = [];
 
-    // Filtro Nombre
-    if (buscar) {
-        whereSQL += ` AND estampas.nombre LIKE ? `;
-        parametros.push(`%${buscar}%`);
-    }
+    if (buscar) { whereSQL += ` AND estampas.nombre LIKE ? `; parametros.push(`%${buscar}%`); }
+    if (pais) { whereSQL += ` AND paises.nombre_pais = ? `; parametros.push(pais); }
+    if (tipo_id) { whereSQL += ` AND estampas.id_tipo = ? `; parametros.push(tipo_id); }
+    
+    if (estado === 'no_tengo') { whereSQL += ` AND estampas.cantidad_tengo = 0 `; }
+    else if (estado === 'tengo') { whereSQL += ` AND estampas.cantidad_tengo > 0 `; }
+    else if (estado === 'repetidos') { whereSQL += ` AND estampas.cantidad_tengo >= 2 `; }
 
-    // Filtro País
-    if (pais) {
-        whereSQL += ` AND paises.nombre_pais = ? `;
-        parametros.push(pais);
-    }
-
-    // Filtro Tipo (id_tipo en tu DB)
-    if (tipo_id !== undefined && tipo_id !== '') {
-        whereSQL += ` AND estampas.id_tipo = ? `;
-        parametros.push(tipo_id);
-    }
-
-    // Filtro Estado de Cantidad
-    if (estado === 'no_tengo') {
-        whereSQL += ` AND estampas.cantidad_tengo = 0 `;
-    } else if (estado === 'tengo') {
-        whereSQL += ` AND estampas.cantidad_tengo > 0 `;
-    } else if (estado === 'repetidos') {
-        whereSQL += ` AND estampas.cantidad_tengo >= 2 `;
-    }
-
-    // Ordenamiento
     let ordenamientoSQL = ` ORDER BY estampas.numero_album ASC `;
-    if (orden === 'ultima_modificacion') {
-        ordenamientoSQL = ` ORDER BY estampas.ultima_alteracion DESC `;
-    } else if (orden === 'nombre') {
-        ordenamientoSQL = ` ORDER BY estampas.nombre ASC, estampas.numero_album ASC `;
-    }
+    if (orden === 'ultima_modificacion') { ordenamientoSQL = ` ORDER BY estampas.ultima_alteracion DESC `; }
+    else if (orden === 'nombre') { ordenamientoSQL = ` ORDER BY estampas.nombre ASC `; }
 
-    // 🌟 CORRECCIÓN: INNER JOIN adaptado con 'id_pais'
+    // Construcción de la consulta final
     const queryDatos = `
-        SELECT 
-            estampas.*, 
-            paises.nombre_pais
+        SELECT estampas.*, paises.nombre_pais
         FROM estampas
         INNER JOIN paises ON estampas.id_pais = paises.id_pais
         ${whereSQL}
         ${ordenamientoSQL}
-    const parametrosDatos = [
-    ...parametros,
-    limiteNumero,
-    offsetNumero
-];
+        LIMIT ? OFFSET ?
     `;
 
     const parametrosDatos = [...parametros, limiteNumero, offsetReal];
 
-    // Query Total para Paginación
     const queryTotal = `
         SELECT COUNT(*) AS total 
         FROM estampas
@@ -134,22 +99,14 @@ const offsetNumero = parseInt(offset);
         ${whereSQL}
     `;
 
-    // Ejecución: Total Registros
     conexion.query(queryTotal, parametros, (errorTotal, resultadoTotal) => {
-        if (errorTotal) {
-            console.error(errorTotal);
-            return res.status(500).json({ error: errorTotal.message });
-        }
+        if (errorTotal) return res.status(500).json({ error: errorTotal.message });
 
         const totalRegistros = resultadoTotal[0].total;
         const totalPaginas = Math.ceil(totalRegistros / maximoPaginaNumero);
 
-        // Ejecución: Captura de Datos
         conexion.query(queryDatos, parametrosDatos, (errorDatos, resultados) => {
-            if (errorDatos) {
-                console.error(errorDatos);
-                return res.status(500).json({ error: errorDatos.message });
-            }
+            if (errorDatos) return res.status(500).json({ error: errorDatos.message });
 
             res.json({
                 datos: resultados,
@@ -160,7 +117,6 @@ const offsetNumero = parseInt(offset);
         });
     });
 });
-
 //==============================================================================
 // ACTUALIZAR CANTIDAD
 //==============================================================================
