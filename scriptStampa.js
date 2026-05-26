@@ -39,7 +39,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
     configurarPaginacion();
     iniciarApp();
-
 });
 
 
@@ -73,7 +72,7 @@ function configurarMenuFiltros() {
 
 // ==========================================
 // EVENTOS
-
+// ==========================================
 
 function configurarEventos() {
 
@@ -100,10 +99,7 @@ function configurarEventos() {
         'change'
     );
 
-    // ==========================================
     // SCROLL LIMITADO INTERNO
-
-
     let timeoutScroll;
 
     window.addEventListener('scroll', () => {
@@ -136,7 +132,7 @@ function configurarEventos() {
 
 function agregarEventoSiExiste(id, evento) {
 
- const elemento = document.getElementById(id);
+    const elemento = document.getElementById(id);
     if (!elemento) return;
 
     elemento.addEventListener(evento, () => {
@@ -155,7 +151,7 @@ function agregarEventoSiExiste(id, evento) {
 function configurarPaginacion() {
 
     const btnAnterior = document.getElementById('btn-pagina-anterior');
- const btnSiguiente =  document.getElementById('btn-pagina-siguiente');
+    const btnSiguiente =  document.getElementById('btn-pagina-siguiente');
 
     // BOTÓN ANTERIOR
     if (btnAnterior) {
@@ -212,23 +208,17 @@ function actualizarUIpaginacion() {
 
     // TEXTO
     if (texto) {
-
-        texto.textContent =
-            `Página ${paginaActual} de ${totalPaginas}`;
+        texto.textContent = `Página ${paginaActual} de ${totalPaginas}`;
     }
 
     // BOTÓN ANTERIOR
     if (btnAnterior) {
-
-        btnAnterior.disabled =
-            paginaActual <= 1;
+        btnAnterior.disabled = paginaActual <= 1;
     }
 
     // BOTÓN SIGUIENTE
     if (btnSiguiente) {
-
-        btnSiguiente.disabled =
-            paginaActual >= totalPaginas;
+        btnSiguiente.disabled = paginaActual >= totalPaginas;
     }
 }
 
@@ -261,51 +251,37 @@ function cargarImagenPorDefecto(img) {
 
 async function cambiarCantidad(idJugador, cambio) {
 
-    const contador =
-        document.getElementById(`cant-${idJugador}`);
-
+    const contador = document.getElementById(`cant-${idJugador}`);
     if (!contador) return;
 
-    let valorActual =
-        parseInt(contador.innerText) || 0;
-
+    let valorActual = parseInt(contador.innerText) || 0;
     valorActual += cambio;
 
-    if (valorActual < 0) {
-        valorActual = 0;
-    }
+    if (valorActual < 0) valorActual = 0;
 
     contador.innerText = valorActual;
 
     try {
-        const respuesta =
-            await fetch('/api/estampas/actualizar', {
-
-                method: 'POST',
-
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-
-                body: JSON.stringify({
-                    id: idJugador,
-                    cantidad: valorActual
-                })
-            });
+        const respuesta = await fetch('/api/estampas/actualizar', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                id: idJugador,        // Este es el ID del jugador
+                cantidad: valorActual // ESTO DEBE LLAMARSE 'cantidad' (igual que en tu Backend)
+            })
+        });
 
         if (!respuesta.ok) {
-
-            throw new Error(
-                "Error actualizando cantidad"
-            );
+            throw new Error("Error actualizando cantidad");
         }
 
     } catch (error) {
         console.error(error);
-        alert("Error guardando cantidad.");
+        alert("Error guardando cantidad en la base de datos.");
     }
 }
-
 
 // ==========================================
 // SELECCIONAR FOTO
@@ -320,7 +296,6 @@ function seleccionarFoto(idJugador) {
         );
 
     if (input) {
-
         input.click();
     }
 }
@@ -332,91 +307,64 @@ function seleccionarFoto(idJugador) {
 
 async function subirImagenJugador(e) {
 
-const archivoOriginal = e.target.files[0];
-if (!archivoOriginal || !idJugadorActual) return;
+    const archivoOriginal = e.target.files[0];
+    if (!archivoOriginal || !idJugadorActual) return;
 
-try {
-    const CLOUD_NAME = "dn1tojwh2";
-    const UPLOAD_PRESET = "estampas_preset";
-    
-    // 🌟 CAMBIO AQUÍ: Detectamos la extensión de forma más segura para Android
-    let extension = archivoOriginal.name.split('.').pop().toLowerCase();
-    if (extension === 'jpeg' || !extension) extension = 'jpg'; 
+    try {
+        const CLOUD_NAME = "dn1tojwh2";
+        const UPLOAD_PRESET = "estampas_preset";
+        
+        let extension = archivoOriginal.name.split('.').pop().toLowerCase();
+        if (extension === 'jpeg' || !extension) extension = 'jpg'; 
 
-    // Creamos el archivo con un nombre limpio y plano
-    const archivoRenombrado = new File(
-        [archivoOriginal],
-        `jugador_${idJugadorActual}.${extension}`,
-        { type: archivoOriginal.type }
-    );
-
-    const formData = new FormData();
-
-        formData.append(
-            'file',
-            archivoRenombrado
+        const archivoRenombrado = new File(
+            [archivoOriginal],
+            `jugador_${idJugadorActual}.${extension}`,
+            { type: archivoOriginal.type }
         );
 
-        formData.append(
-            'upload_preset',
-            UPLOAD_PRESET
+        const formData = new FormData();
+        formData.append('file', archivoRenombrado);
+        formData.append('upload_preset', UPLOAD_PRESET);
+
+        const respuestaCloudinary = await fetch(
+            `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
+            {
+                method: 'POST',
+                body: formData
+            }
         );
 
-        const respuestaCloudinary =
-            await fetch(
-                `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`,
-                {
-                    method: 'POST',
-                    body: formData
-                }
-            );
-
-        const datos =
-            await respuestaCloudinary.json();
+        const datos = await respuestaCloudinary.json();
 
         if (!respuestaCloudinary.ok) {
-
-            throw new Error(
-                datos.error?.message
-            );
+            throw new Error(datos.error?.message || "Error en Cloudinary");
         }
 
         const imagenURL = datos.secure_url;
 
-        const respuestaBackend =
-            await fetch(
-                '/api/estampas/agregar-foto',
-                {
-                    method: 'POST',
-
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-
-                    body: JSON.stringify({
-                        id: idJugadorActual,
-                        imagen_url: imagenURL
-                    })
-                }
-            );
+        const respuestaBackend = await fetch('/api/estampas/agregar-foto', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                id: idJugadorActual,
+                imagen_url: imagenURL
+            })
+        });
 
         if (!respuestaBackend.ok) {
-
-            throw new Error(
-                "Error guardando BD"
-            );
+            throw new Error("Error guardando BD");
         }
 
-        // ACTUALIZAR IMAGEN
+        // ACTUALIZAR IMAGEN VISUALMENTE
         const img = document.querySelector(
             `button[onclick="seleccionarFoto(${idJugadorActual})"]`
-        )?.closest('.card')
-         ?.querySelector('img');
+        )?.closest('.card')?.querySelector('img');
 
         if (img) {
-
-            img.src =
-                `${imagenURL}?v=${Date.now()}`;
+            img.src = `${imagenURL}?v=${Date.now()}`;
         }
 
         alert("Imagen actualizada.");
@@ -424,7 +372,6 @@ try {
     } catch (error) {
         console.error(error);
         alert(error.message);
-
     } finally {
         e.target.value = "";
         idJugadorActual = null;
@@ -439,34 +386,20 @@ try {
 async function cargarPaisesFiltro() {
 
     try {
+        const respuesta = await fetch('/api/paises');
+        const paises = await respuesta.json();
 
-        const respuesta =
-            await fetch('/api/paises');
-
-        const paises =
-            await respuesta.json();
-
-        const selector =
-            document.getElementById(
-                'filtro-pais'
-            );
-
+        const selector = document.getElementById('filtro-pais');
         if (!selector) return;
 
-        selector.innerHTML =
-            '<option value="">Sin filtro de país</option>';
+        selector.innerHTML = '<option value="">Sin filtro de país</option>';
 
         paises.forEach(pais => {
-
             if (!pais.nombre_pais) return;
 
             selector.insertAdjacentHTML(
                 'beforeend',
-                `
-                <option value="${pais.nombre_pais}">
-                    ${pais.nombre_pais}
-                </option>
-                `
+                `<option value="${pais.nombre_pais}">${pais.nombre_pais}</option>`
             );
         });
 
@@ -480,83 +413,37 @@ async function cargarPaisesFiltro() {
 // CARGAR ESTAMPAS
 // ==========================================
 
-async function cargarEstampasDesdeBaseDatos(
-    esNuevaBusqueda = true
-) {
+async function cargarEstampasDesdeBaseDatos(esNuevaBusqueda = true) {
 
     if (cargandoEstampas) return;
     cargandoEstampas = true;
 
-    const loader =
-        document.getElementById(
-            'loader-infinito'
-        );
-
+    const loader = document.getElementById('loader-infinito');
     if (loader) {
         loader.style.display = 'block';
     }
 
     try {
-
-        // RESET
         if (esNuevaBusqueda) {
             offsetInterno = 0;
             finScrollInterno = false;
         }
 
-        const grid =
-            document.getElementById(
-                'grid-jugadores'
-            );
-
+        const grid = document.getElementById('grid-jugadores');
         if (!grid) return;
 
-        // ==========================================
-        // FILTROS
-        // ==========================================
+        // Filtros del DOM
+        const busqueda = document.getElementById('buscador-nombre')?.value || '';
+        const pais = document.getElementById('filtro-pais')?.value || '';
+        const tipo = document.getElementById('filtroTipo')?.value || '';
+        const estado = document.getElementById('filtroEstado')?.value || '';
+        const orden = document.getElementById('ordenarPor')?.value || 'numero_album';
 
-        const busqueda =
-            document.getElementById(
-                'buscador-nombre'
-            )?.value || '';
+        // Máximo por página
+        maximoPorPagina = parseInt(document.getElementById('selector-cantidad-pagina')?.value) || 100;
 
-        const pais =
-            document.getElementById(
-                'filtro-pais'
-            )?.value || '';
-
-        const tipo =
-            document.getElementById(
-                'filtroTipo'
-            )?.value || '';
-
-        const estado =
-            document.getElementById(
-                'filtroEstado'
-            )?.value || '';
-
-        const orden =
-            document.getElementById(
-                'ordenarPor'
-            )?.value || 'numero_album';
-
-        // ==========================================
-        // MÁXIMO POR PÁGINA
-        // ==========================================
-
-        maximoPorPagina =
-            parseInt(
-                document.getElementById(
-                    'selector-cantidad-pagina'
-                )?.value
-            ) || 100;
-
-        // ==========================================
-        // URL
-        // ==========================================
-
-        const url =
-            `/api/estampas`
+        // Construcción de URL
+        const url = `/api/estampas`
             + `?buscar=${encodeURIComponent(busqueda)}`
             + `&pais=${encodeURIComponent(pais)}`
             + `&tipo_id=${encodeURIComponent(tipo)}`
@@ -568,33 +455,14 @@ async function cargarEstampasDesdeBaseDatos(
             + `&maximoPagina=${maximoPorPagina}`;
 
         const respuesta = await fetch(url);
-
         const resultado = await respuesta.json();
 
-        // Backend debe devolver:
-        // {
-        //   datos: [],
-        //   totalPaginas: 4
-        // }
-
-        const estampas =
-            resultado.datos || [];
-
-        totalPaginas =
-            resultado.totalPaginas || 1;
-
-        // ==========================================
-        // LIMPIAR GRID
-        // ==========================================
+        const estampas = resultado.datos || [];
+        totalPaginas = resultado.totalPaginas || 1;
 
         if (esNuevaBusqueda) {
-
             grid.innerHTML = '';
         }
-
-        // ==========================================
-        // FIN SCROLL
-        // ==========================================
 
         if (
             estampas.length < BLOQUE_SCROLL ||
@@ -603,21 +471,9 @@ async function cargarEstampasDesdeBaseDatos(
             finScrollInterno = true;
         }
 
-        // ==========================================
-        // SIN RESULTADOS
-        // ==========================================
-
-        if (
-            esNuevaBusqueda &&
-            estampas.length === 0
-        ) {
-
+        if (esNuevaBusqueda && estampas.length === 0) {
             grid.innerHTML = `
-                <p style="
-                    text-align:center;
-                    padding:40px;
-                    color:#666;
-                ">
+                <p style="text-align:center; padding:40px; color:#666;">
                     No se encontraron estampas.
                 </p>
             `;
@@ -625,88 +481,70 @@ async function cargarEstampasDesdeBaseDatos(
             return;
         }
 
-        // ==========================================
-        // RENDER
-        // ==========================================
-
+        // RENDER 
         estampas.forEach(jugador => {
-    const html = `
-        <div class="card">
-            <div class="card-bloque-superior">
-                <!-- 👇 AQUÍ AGREGAMOS EL ONCLICK PARA QUE SUME AL TOCAR LA IMAGEN -->
-                <div class="card-imagen-wrapper imagen-clickeable" 
-                     onclick="cambiarCantidad(${jugador.id}, 1)" 
-                     style="cursor: pointer;">
+            const html = `
+                <div class="card">
+                    <div class="card-bloque-superior">
+                        <div class="card-imagen-wrapper imagen-clickeable" 
+                             onclick="cambiarCantidad(${jugador.id_estampa}, 1)" 
+                             style="cursor: pointer;">
 
-                    <img
-                        loading="lazy"
-                        src="${jugador.imagen_url || URL_IMAGEN_POR_DEFECTO}"
-                        alt="Estampa"
-                        onerror="cargarImagenPorDefecto(this)"
-                    >
+                            <img
+                                loading="lazy"
+                                src="${jugador.imagen_url || URL_IMAGEN_POR_DEFECTO}"
+                                alt="Estampa"
+                                onerror="cargarImagenPorDefecto(this)"
+                            >
+                        </div>
 
-                </div>
-
-                <div class="card-controles-laterales">
-
-                    <button
-                        class="btn-control btn-sumar"
-                        onclick="cambiarCantidad(${jugador.id},1)">
-                        +
-                    </button>
+                        <div class="card-controles-laterales">
+                            <button
+                                class="btn-control btn-sumar"
+                                onclick="cambiarCantidad(${jugador.id_estampa}, 1)">
+                                +
+                            </button>
 
                             <span
                                 class="existencia-numero"
-                                id="cant-${jugador.id}">
+                                id="cant-${jugador.id_estampa}">
                                 ${jugador.cantidad_tengo}
                             </span>
 
                             <button
                                 class="btn-control btn-restar"
-                                onclick="cambiarCantidad(${jugador.id},-1)">
+                                onclick="cambiarCantidad(${jugador.id_estampa}, -1)">
                                 -
                             </button>
 
                             <button
                                 class="btn-subir-imagen-icono"
-                                onclick="seleccionarFoto(${jugador.id})">
+                                onclick="seleccionarFoto(${jugador.id_estampa})">
                                 📷
                             </button>
                         </div>
                     </div>
 
                     <div class="card-info-inferior">
-
                         <div class="jugador-nombre">
                             ${jugador.nombre}
                         </div>
-
                         <div class="jugador-pais">
-                            📍 ${jugador.nombre_pais || 'Sin País'}
-                            - ${jugador.numero_album}
+                            📍 ${jugador.nombre_pais || 'Sin País'} - ${jugador.numero_album}
                         </div>
                     </div>
                 </div>
             `;
 
-            grid.insertAdjacentHTML(
-                'beforeend',
-                html
-            );
+            grid.insertAdjacentHTML('beforeend', html);
         });
-
-        // ==========================================
-        // ACTUALIZAR UI
-        // ==========================================
 
         actualizarUIpaginacion();
 
     } catch (error) {
         console.error(error);
-
     } finally {
         cargandoEstampas = false;
-
         if (loader) {
             loader.style.display = 'none';
         }
