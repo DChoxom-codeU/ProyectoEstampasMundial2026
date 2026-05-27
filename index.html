@@ -1,233 +1,58 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
+
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mis Estampas Mundial 2026</title>
 
-    <!-- Enlace al archivo de estilos externo -->
-    <link rel="stylesheet" href="stylesStampa.css">
+    <title>
+        Álbum Mundial 2026
+    </title>
+
+    <!-- ====================================== -->
+    <!-- CSS -->
+
+    <link  rel="stylesheet" href="stylesStampa.css">
 </head>
 
 <body>
+    <!-- ====================================== -->
+    <!-- INPUT OCULTO -->
 
-    <!-- Input oculto para abrir la ventana de archivos -->
     <input
         type="file"
         id="input-archivo-oculto"
         accept="image/*"
-        style="display: none;"
+        style="display:none;"
     >
-
-    <!-- ========================= -->
-    <!-- NAVBAR SUPERIOR -->
-    <!-- ========================= -->
+    <!-- ====================================== -->
+    <!-- NAVBAR -->
 
     <header class="navbar">
         <div class="navbar-linea-superior">
             <div class="logo">
-                Álbum 2026 ⚽
-            </div>
-            <!-- Botón móvil -->
-            <button
-                id="btn-toggle-filtros"
-                class="btn-toggle-filtros"
-            >
-                Filtros ⚙️
-            </button>
-        </div>
-
-        <!-- CONTENEDOR FILTROS -->
-        <div
-            class="menu-filtros-contenedor"
-            id="menu-filtros-contenedor"
-        >
-
-            <div class="menu-filtros">
-
-                <!-- BUSCADOR -->
-                <input
-                    class="filtro-Texto"
-                    type="text"
-                    id="buscador-nombre"
-                    placeholder="Buscar jugador..."
-                >
-
-                <!-- FILTRO PAÍS -->
-                <select
-                    id="filtro-pais"
-                    class="filtro-Texto"
-                >
-                    <option value="">
-                        Todos los Países
-                    </option>
-                </select>
-
-                <!-- FILTRO TIPO -->
-                <select
-                    id="filtroTipo"
-                    class="filtro-Texto"
-                >
-                    <option value="">
-                        Todos los tipos
-                    </option>
-
-                    <option value="1">
-                        Escudos
-                    </option>
-
-                    <option value="2">
-                        Equipos
-                    </option>
-
-                    <option value="3">
-                        Historia
-                    </option>
-
-                    <option value="4">
-                        Coca-Cola
-                    </option>
-
-                    <option value="0">
-                        Normales (Jugadores)
-                    </option>
-                </select>
-
-                <!-- FILTRO ESTADO -->
-                <select
-                    id="filtroEstado"
-                    class="filtro-Texto"
-                >
-                    <option value="">
-                        Cualquier estado
-                    </option>
-
-                    <option value="no_tengo">
-                        No tengo (Faltantes)
-                    </option>
-
-                    <option value="tengo">
-                        Los que tengo (Al menos 1)
-                    </option>
-
-                    <option value="repetidos">
-                        Repetidos (2 o más)
-                    </option>
-                </select>
-
-                <!-- ORDENAMIENTO -->
-                <select
-                    id="ordenarPor"
-                    class="filtro-Texto"
-                >
-                    <option
-                        value="numero_album"
-                        selected
-                    >
-                        Ordenar por: Número de Álbum
-                    </option>
-
-                    <option value="ultima_modificacion">
-                        Ordenar por: Última modificación
-                    </option>
-
-                    <option value="nombre">
-                        Ordenar por: Nombre (A-Z)
-                    </option>
-                </select>
-
-           
+                Álbum Mundial 2026 ⚽
             </div>
         </div>
     </header>
 
+    <!-- ====================================== -->
+    <!-- CONTENEDOR PRINCIPAL -->
 
-    <!-- ========================= -->
-    <!-- GRID DE ESTAMPAS -->
-    <!-- ========================= -->
-
-    <main
-        class="contenedor-grid"
-        id="grid-jugadores"
-    >
-
-        <p
-            style="
-                padding: 10px;
-                color: #666;
-            "
-        >
-            Cargando estampas...
-        </p>
-
+    <main id="grid-jugadores" class="contenedor-principal">
+        <!-- ====================================== -->
+        <!-- LOADER INICIAL -->
+        <!-- ====================================== -->
+        <div class="loader-inicial">
+            <div class="spinner-icono">⚽</div>
+            <p>  Cargando grupos...  </p>
+        </div>
     </main>
 
-
-    <!-- ========================= -->
-    <!-- LOADER -->
-    <!-- ========================= -->
-
-    <div
-        id="loader-infinito"
-        style="
-            display: none;
-            text-align: center;
-            padding: 20px;
-            font-weight: bold;
-            color: #666;
-            width: 100%;
-        "
-    >
-
-        <div class="spinner-icono">
-            ⚽
-        </div>
-
-        <span>
-            Cargando más estampas increíbles...
-        </span>
-
-    </div>
-
-
-    <!-- ========================= -->
-    <!-- PAGINACIÓN -->
-    <!-- ========================= -->
-
-    
-
-
-    <!-- ========================= -->
-    <!-- SCRIPT PRINCIPAL -->
-    <!-- ========================= -->
-
+    <!-- ====================================== -->
+    <!-- SCRIPT -->
     <script src="scriptStampa.js"></script>
-
-
-    <!-- ========================= -->
-    <!-- ESTILOS SPINNER -->
-    <!-- ========================= -->
-
-    <style>
-
-        .spinner-icono {
-
-            font-size: 2rem;
-            display: inline-block;
-            animation: girarBalon 1s linear infinite;
-            margin-bottom: 5px;
-        }
-
-        @keyframes girarBalon {
-            0% {
-                transform: rotate(0deg);
-            }
-
-            100% {
-                transform: rotate(360deg);
-            }
-        }
-    </style>
 
 </body>
 </html>

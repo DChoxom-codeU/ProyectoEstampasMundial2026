@@ -1,235 +1,328 @@
 //==============================================================================
 // IMPORTS
 //==============================================================================
+
 const express = require('express');
 const cors = require('cors');
 const mysql = require('mysql2');
 const path = require('path');
 const cloudinary = require('cloudinary').v2;
 
+
 //==============================================================================
 // APP
 //==============================================================================
+
 const app = express();
+
 const puertoServer = process.env.PORT || 8080;
+
 
 //==============================================================================
 // MIDDLEWARES
 //==============================================================================
+
 app.use(cors());
+
 app.use(express.json());
+
 app.use(express.static(path.join(__dirname)));
+
 
 //==============================================================================
 // CLOUDINARY
 //==============================================================================
+
 cloudinary.config({
+
     cloud_name: 'dn1tojwh2',
     api_key: '882288655611385',
     api_secret: 'o2VSM5PsUEjsoxkOprvzEDh1LzM'
 });
 
+
 //==============================================================================
 // MYSQL
 //==============================================================================
+
 const conexion = mysql.createConnection({
+
     host: 'localhost',
-    port: 3306, // 🌟 CORRECCIÓN: El puerto de MySQL suele ser 3306. El 8080 lo usa tu app de Express.
+    port: 3306,
     user: 'root',
     password: 'link',
     database: 'albumvirtualgestordata'
 });
 
+
 //==============================================================================
 // CONEXIÓN MYSQL
 //==============================================================================
+
 conexion.connect((err) => {
+
     if (err) {
-        console.error('❌ Error conectando a MySQL:', err);
+
+        console.error(
+            '❌ Error conectando a MySQL:',
+            err
+        );
+
         return;
     }
-    console.log('✅ Conectado a MySQL correctamente');
+
+    console.log(
+        '✅ Conectado a MySQL correctamente'
+    );
 });
 
+
 //==============================================================================
-// RUTA ESTAMPAS - PAGINACIÓN + SCROLL INTERNO (CORREGIDA)
+// OBTENER ESTAMPAS AGRUPADAS POR GRUPO
 //==============================================================================
 app.get('/api/estampas', (req, res) => {
-    const { buscar, pais, tipo_id, estado, orden, pagina, limite, offsetInterno, maximoPagina } = req.query;
+    // Tu query se mantiene igual, ya tiene todos los datos necesarios
+    const query = `
+        SELECT
+            estampas.id_estampa, estampas.numero_album, estampas.nombre,
+            estampas.id_pais, estampas.imagen_url, estampas.cantidad_tengo,
+            grupos.id_grupo, grupos.grupo_name,
+            paises.nombre_pais,
+            paises.bandera_url
 
-    const limiteNumero = parseInt(limite) || 25;
-    const paginaNumero = parseInt(pagina) || 1;
-    const offsetInternoNum = parseInt(offsetInterno) || 0;
-    const maximoPaginaNumero = parseInt(maximoPagina) || 100;
-
-    // Cálculo del offset real para SQL
-    const offsetReal = ((paginaNumero - 1) * maximoPaginaNumero) + offsetInternoNum;
-
-    let whereSQL = ` WHERE 1=1 `;
-    let parametros = [];
-
-    if (buscar) { whereSQL += ` AND estampas.nombre LIKE ? `; parametros.push(`%${buscar}%`); }
-    if (pais) { whereSQL += ` AND paises.nombre_pais = ? `; parametros.push(pais); }
-    if (tipo_id) { whereSQL += ` AND estampas.id_tipo = ? `; parametros.push(tipo_id); }
-    
-    if (estado === 'no_tengo') { whereSQL += ` AND estampas.cantidad_tengo = 0 `; }
-    else if (estado === 'tengo') { whereSQL += ` AND estampas.cantidad_tengo > 0 `; }
-    else if (estado === 'repetidos') { whereSQL += ` AND estampas.cantidad_tengo >= 2 `; }
-
-    let ordenamientoSQL = ` ORDER BY estampas.numero_album ASC `;
-    if (orden === 'ultima_modificacion') { ordenamientoSQL = ` ORDER BY estampas.ultima_alteracion DESC `; }
-    else if (orden === 'nombre') { ordenamientoSQL = ` ORDER BY estampas.nombre ASC `; }
-
-    // Construcción de la consulta final
-    const queryDatos = `
-        SELECT estampas.*, paises.nombre_pais
         FROM estampas
         INNER JOIN paises ON estampas.id_pais = paises.id_pais
-        ${whereSQL}
-        ${ordenamientoSQL}
-        LIMIT ? OFFSET ?
-    `;
+        INNER JOIN grupos ON paises.id_grupo = grupos.id_grupo
+        ORDER BY grupos.id_grupo ASC, paises.id_pais ASC, estampas.numero_album ASC`;
 
-    const parametrosDatos = [...parametros, limiteNumero, offsetReal];
+    conexion.query(query, (error, resultados) => {
+        if (error) return res.status(500).json({ error: error.message });
 
-    const queryTotal = `
-        SELECT COUNT(*) AS total 
-        FROM estampas
-        INNER JOIN paises ON estampas.id_pais = paises.id_pais
-        ${whereSQL}
-    `;
+        const estructura = {};
 
-    conexion.query(queryTotal, parametros, (errorTotal, resultadoTotal) => {
-        if (errorTotal) return res.status(500).json({ error: errorTotal.message });
-
-        const totalRegistros = resultadoTotal[0].total;
-        const totalPaginas = Math.ceil(totalRegistros / maximoPaginaNumero);
-
-        conexion.query(queryDatos, parametrosDatos, (errorDatos, resultados) => {
-            if (errorDatos) return res.status(500).json({ error: errorDatos.message });
-
-            res.json({
-                datos: resultados,
-                totalPaginas,
-                paginaActual: paginaNumero,
-                totalRegistros
-            });
+        resultados.forEach(item => {
+            // 1. Asegurar Grupo
+            if (!estructura[item.id_grupo]) {
+                estructura[item.id_grupo] = {
+                    id_grupo: item.id_grupo,
+                    grupo_name: item.grupo_name,
+                    paises: {} // Aquí guardaremos los países
+                };
+            }
+            // 2. Asegurar País dentro del grupo
+            const grupo = estructura[item.id_grupo];
+            if (!grupo.paises[item.id_pais]) {
+                grupo.paises[item.id_pais] = {
+                    id_pais: item.id_pais,
+                    nombre_pais: item.nombre_pais,
+                    bandera_url: item.bandera_url, // <--- ¡AQUÍ ESTABA EL ERROR! Faltaba esta línea
+                    estampas: []
+                };
+            }
+            // 3. Agregar Estampa al país
+            grupo.paises[item.id_pais].estampas.push(item);
         });
+        // Convertir objetos a arrays para que el front lo recorra fácil
+        const gruposFinal = Object.values(estructura).map(g => ({
+            ...g,
+            paises: Object.values(g.paises)
+        }));
+        res.json({ grupos: gruposFinal });
     });
 });
+
 //==============================================================================
 // ACTUALIZAR CANTIDAD
 //==============================================================================
 app.post('/api/estampas/actualizar', (req, res) => {
-    const { id, cantidad } = req.body;
 
-    if (!id || cantidad === undefined) {
-        return res.status(400).json({ error: "Faltan parámetros" });
+    const {
+        id,
+        cantidad
+    } = req.body;
+
+    // VALIDACIÓN
+    if (
+        !id ||
+        cantidad === undefined
+    ) {
+        return res.status(400).json({
+            error: "Faltan parámetros"
+        });
     }
 
-    // 🌟 CORRECCIÓN: Se cambió 'id' por 'id_estampa' en la cláusula WHERE
+    // QUERY
+
     const query = `
-        UPDATE estampas
-        SET cantidad_tengo = ?,
+         UPDATE estampas
+        SET
+            cantidad_tengo = ?,
             ultima_alteracion = NOW()
+
         WHERE id_estampa = ?
     `;
-
-    conexion.query(query, [cantidad, id], (error) => {
-        if (error) {
-            console.error(error);
-            return res.status(500).json({ error: error.message });
+    conexion.query(
+        query,
+        [cantidad, id],
+        (error) => {
+            if (error) {
+                console.error(error);
+                return res.status(500).json({
+                    error: error.message
+                });
+            }
+            res.json({
+                success: true
+            });
         }
-        res.json({ success: true });
-    });
+    );
 });
 
-//==============================================================================
-// OBTENER PAÍSES (Para cargar selectores o filtros)
-//==============================================================================
-app.get('/api/paises', (req, res) => {
-    const query = `
-        SELECT DISTINCT nombre_pais 
-        FROM paises
-        WHERE nombre_pais IS NOT NULL
-        ORDER BY nombre_pais ASC
-    `;
-
-    conexion.query(query, (error, resultados) => {
-        if (error) {
-            console.error(error);
-            return res.status(500).json({ error: error.message });
-        }
-        res.json(resultados);
-    });
-});
 
 //==============================================================================
-// GUARDAR / ACTUALIZAR FOTO (CON INTEGRACIÓN A CLOUDINARY)
+// GUARDAR / ACTUALIZAR FOTO
 //==============================================================================
+
 app.post('/api/estampas/agregar-foto', (req, res) => {
-    const { id, imagen_url } = req.body;
 
+    const {
+        id,
+        imagen_url
+    } = req.body;
+
+    // VALIDACIÓN
     if (!id || !imagen_url) {
-        return res.status(400).json({ error: "Faltan parámetros" });
+        return res.status(400).json({
+            error: "Faltan parámetros"
+        });
     }
 
-    // 🌟 CORRECCIÓN: Se cambió 'id' por 'id_estampa' en la búsqueda
+    //==========================================================
+    // BUSCAR IMAGEN ANTERIOR
+    //==========================================================
+
     const queryBuscar = `
-        SELECT imagen_url 
-        FROM estampas 
+        SELECT imagen_url
+        FROM estampas
         WHERE id_estampa = ?
     `;
 
-    conexion.query(queryBuscar, [id], (error, resultados) => {
-        if (!error && resultados.length > 0) {
-            const urlVieja = resultados[0].imagen_url;
+    conexion.query(
+        queryBuscar,
+        [id],
 
-            // Eliminar imagen anterior de Cloudinary si existía una
-            if (urlVieja && urlVieja.includes('cloudinary.com')) {
-                try {
-                    const partes = urlVieja.split('/');
-                    const archivo = partes[partes.length - 1];
-                    const publicId = archivo.split('.')[0];
+        (error, resultados) => {
+            //==================================================
+            // BORRAR IMAGEN VIEJA CLOUDINARY
+            //==================================================
 
-                    cloudinary.uploader.destroy(publicId, (err, result) => {
-                        if (err) console.error("❌ Error borrando foto de Cloudinary:", err);
-                        else console.log("🗑️ Foto vieja eliminada de Cloudinary:", result);
-                    });
-                } catch (e) {
-                    console.error("Error procesando borrado de URL antigua:", e);
+            if (
+                !error &&
+                resultados.length > 0
+            ) {
+
+                const urlVieja =
+                    resultados[0].imagen_url;
+
+                if (
+                    urlVieja &&
+                    urlVieja.includes('cloudinary.com')
+                ) {
+
+                    try {
+
+                        const partes = urlVieja.split('/');
+                        const archivo = partes[partes.length - 1];
+                        const publicId = archivo.split('.')[0];
+                        cloudinary.uploader.destroy(
+                            publicId,
+                            (err, result) => {
+
+                                if (err) {
+                                    console.error(
+                                        "❌ Error borrando foto:",
+                                        err
+                                    );
+                                }
+                                else {
+
+                                    console.log(
+                                        "🗑️ Foto eliminada:",
+                                        result
+                                    );
+                                }
+                            }
+                        );
+                    } catch (e) {
+
+                        console.error(
+                            "Error procesando borrado:",
+                            e
+                        );
+                    }
                 }
             }
+            //==================================================
+            // UPDATE IMAGEN
+            //==================================================
+
+            const queryUpdate = `
+                UPDATE estampas
+                SET imagen_url = ?
+                WHERE id_estampa = ?
+            `;
+
+            conexion.query(
+                queryUpdate,
+                [imagen_url, id],
+                (errUpdate) => {
+                    if (errUpdate) {                  
+                        console.error(errUpdate);
+                        return res.status(500).json({
+                            error: errUpdate.message
+                        });
+                    }
+                    res.json({
+                        success: true,
+                        mensaje:
+                        "Foto actualizada"
+                    });
+                }
+            );
         }
+    );
+});
 
-        // 🌟 CORRECCIÓN: Se cambió 'id' por 'id_estampa' en el UPDATE
-        const queryUpdate = `
-            UPDATE estampas
-            SET imagen_url = ?
-            WHERE id_estampa = ?
-        `;
 
-        conexion.query(queryUpdate, [imagen_url, id], (errUpdate) => {
-            if (errUpdate) {
-                console.error(errUpdate);
-                return res.status(500).json({ error: errUpdate.message });
+//==============================================================================
+// TEST MYSQL
+//==============================================================================
+
+app.get('/api/test', (req, res) => {
+    conexion.query(
+
+        'SELECT 1 + 1 AS resultado',
+        (error, resultados) => {
+            if (error) {
+                return res.status(500).json({
+                    error: error.message
+                });
             }
 
-            res.json({
-                success: true,
-                mensaje: "Foto actualizada"
-            });
-        });
-    });
+            res.json(resultados);
+        }
+    );
 });
+
 
 //==============================================================================
 // LEVANTAR SERVIDOR
 //==============================================================================
-app.listen(puertoServer, '0.0.0.0', (err) => {
-    if (err) {
-        console.error("❌ Error levantando servidor:", err);
-        return;
+
+app.listen( puertoServer, '0.0.0.0',
+    (err) => {
+        if (err) {
+            console.error( "❌ Error levantando servidor:",  err ); return; }
+        console.log(  `🚀 Servidor funcionando en:http://localhost:${puertoServer}`);
     }
-    console.log(`🚀 Servidor funcionando en: http://localhost:${puertoServer}`);
-});
+);
