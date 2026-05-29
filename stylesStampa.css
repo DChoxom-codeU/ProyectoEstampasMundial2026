@@ -1,105 +1,6 @@
-*{
-margin:0;
-padding:0;
-box-sizing:border-box;
-font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
-}
-
-:root{
---bg-principal:#0b1020;
---bg-secundario:#12192b;
---bg-card:#171f33;
---navbar:#0f1729;
---texto:#f2f5ff;
---texto-secundario:#9da8c7;
---borde:#24304d;
---acento:#7c3aed;
---acento-hover:#a855f7;
---danger:#ef4444;
---danger-hover:#f87171;
---success:#22c55e;
---success-hover:#4ade80;
---shadow:0 8px 25px rgba(0,0,0,0.45);
---input-bg:#1b2540;
-}
-
-body{
-background:linear-gradient(
-180deg,
-#0b1020 0%,
-#111827 100%
-);
-
-color:var(--texto);
-
-min-height:100vh;
-
-overflow-x:hidden;
-
-padding-top:90px;
-
-transition:
-background .3s ease,
-padding-top .3s ease;
-}
 
 /* =========================================
-NAVBAR
-========================================= */
-
-.navbar{
-position:fixed;
-
-top:0;
-left:0;
-
-width:100%;
-
-background:rgba(15,23,41,0.92);
-
-backdrop-filter:blur(10px);
-
-border-bottom:1px solid var(--borde);
-
-display:flex;
-align-items:center;
-justify-content:center;
-
-padding:14px 20px;
-
-z-index:1000;
-
-box-shadow:0 4px 18px rgba(0,0,0,0.4);
-}
-
-.navbar-linea-superior{
-display:flex;
-align-items:center;
-justify-content:center;
-width:100%;
-}
-
-.logo{
-font-size:24px;
-font-weight:800;
-letter-spacing:1px;
-color:white;
-text-shadow:0 0 10px rgba(124,58,237,.4);
-}
-
-/* =========================================
-CONTENEDOR PRINCIPAL
-========================================= */
-
-.contenedor-principal{
-width:100%;
-max-width:1800px;
-margin:0 auto;
-padding:20px;
-}
-
-/* =========================================
-ACORDEÓN
+1.ACORDEON
 ========================================= */
 
 .grupo-acordeon{
@@ -115,20 +16,15 @@ box-shadow:var(--shadow);
 display:flex;
 align-items:center;
 justify-content:space-between;
-
 padding:18px 22px;
-
 cursor:pointer;
-
 font-size:22px;
 font-weight:800;
-
 background:linear-gradient(
 135deg,
 #1a2440,
 #101827
 );
-
 transition:.2s;
 user-select:none;
 }
@@ -136,8 +32,8 @@ user-select:none;
 .grupo-header:hover{
 background:linear-gradient(
 135deg,
-#253457,
-#172036
+#423e82,
+#071027
 );
 }
 
@@ -145,115 +41,117 @@ background:linear-gradient(
 font-size:18px;
 }
 
-/* =========================================
-CONTENIDO ACORDEÓN
-========================================= */
-
 .grupo-contenido{
 max-height:0;
 overflow:hidden;
 transition:max-height .35s ease;
-display: none; /* Oculto por defecto */
+display:none;
 }
 
 .grupo-contenido.grupo-abierto{
 max-height:10000px;
-display: block; /* Se muestra al abrir */
+display:block;
 }
 
 /* =========================================
-GRID
+2.PAISES
 ========================================= */
 
-.contenedor-grid{
-width:100%;
-padding:20px;
+.pais-bloque{
+margin:5px;
+border:1px solid var(--borde);
+border-radius:12px;
+background:rgba(255,255,255,0.03);
+}
 
-display:grid;
+.pais-header{
+padding:12px 18px;
+cursor:pointer;
+background:rgba(0,0,0,0.2);
+font-weight:600;
+display:flex;
+justify-content:space-between;
+}
 
-grid-template-columns:
-repeat(4,1fr);
-
-gap:20px;
+.pais-header:hover{
+background:rgba(0,0,0,0.3);
 }
 
 /* =========================================
-CARD
+3.CARDS
 ========================================= */
 
 .card{
 background:linear-gradient(
 180deg,
-rgba(23,31,51,.95),
-rgba(17,24,39,.95)
+rgba(23,31,51,0.95),
+rgba(17,24,39,0.95)
 );
-
-border:1px solid var(--borde);
-
+background-clip:padding-box;
+border:2px solid var(--borde);
 border-radius:18px;
-
-overflow:hidden;
-
-padding:12px;
-
 display:flex;
 flex-direction:column;
 gap:10px;
-
+padding:12px;
+overflow:hidden;
 transition:
 transform .2s ease,
 box-shadow .2s ease,
 border-color .2s ease;
-
 box-shadow:var(--shadow);
 }
 
 .card:hover{
 transform:translateY(-5px);
-
-border-color:
-rgba(124,58,237,.6);
-
-box-shadow:
-0 14px 35px rgba(0,0,0,.5);
+border-color:rgba(124,58,237,.6);
+box-shadow:0 14px 35px rgba(0,0,0,.5);
 }
 
 .card-bloque-superior{
 display:flex;
 gap:10px;
 align-items:stretch;
+border-radius:12px;
+overflow:hidden;
+}
+
+.card-info-inferior{
+display:flex;
+flex-direction:column;
+gap:4px;
+overflow:hidden;
 }
 
 /* =========================================
-IMAGEN
+4.IMAGENES
 ========================================= */
 
 .card-imagen-wrapper{
 flex:1;
-
 aspect-ratio:1/1.35;
-
 border-radius:14px;
-
 overflow:hidden;
-
 position:relative;
-
 background:#0f172a;
-
-border:1px solid var(--borde);
+cursor:pointer;
+box-sizing:border-box;
+transition:all .3s ease;
+background:
+linear-gradient(135deg,#ffffff,#000000) padding-box,
+linear-gradient(135deg,#b7c8de,#000000) border-box;
+border:12px solid transparent;
+box-shadow:
+0 10px 20px rgba(0,0,0,0.5),
+inset 0 0 0 1px rgba(255,255,255,0.1);
 }
 
 .card-imagen-wrapper img{
 position:absolute;
-
 inset:0;
-
 width:100%;
 height:100%;
-
 object-fit:cover;
-
 transition:transform .3s ease;
 }
 
@@ -261,50 +159,93 @@ transition:transform .3s ease;
 transform:scale(1.03);
 }
 
+.card-imagen-wrapper.borde-cero{
+border-color:#624786;
+}
+
+.card-imagen-wrapper.borde-uno{
+border-color:#ff6f1c;
+}
+
+.card-imagen-wrapper.borde-repetida{
+border-color:#3682f4;
+}
+
+.card-imagen-wrapper.borde-uno,
+.card-imagen-wrapper.borde-repetida{
+box-shadow:0 0 10px rgba(0,0,0,0.2);
+}
+
 /* =========================================
-CONTROLES
+5.CONTROLES
 ========================================= */
 
 .card-controles-laterales{
 width:52px;
-
 display:flex;
 flex-direction:column;
 align-items:center;
 justify-content:space-between;
-
 gap:3px;
 padding:3px;
-
 background:#101827;
-
 border-radius:12px;
 border:1px solid var(--borde);
 }
 
-.btn-control,
-.btn-subir-imagen-icono{
+/* =========================================
+6.BOTONES
+========================================= */
+
+.btn-control{
 width:100%;
-height:40px;
-
-border:none;
-border-radius:10px;
-
+height:25%;
 cursor:pointer;
-
 transition:.2s;
-
 font-weight:700;
 }
 
-.btn-sumar{
-background:linear-gradient(
-135deg,
-var(--acento),
-#c902af
-);
+.btn-accion{
+padding:12px 20px;
+border:none;
+font-size:18px;
+cursor:pointer;
+}
 
+.btn-restar{
+background:#44598e;
 color:white;
+border:none;
+cursor:pointer;
+font-weight:bold;
+padding:12px 24px;
+font-size:20px;
+border-radius:5px;
+display:flex;
+align-items:center;
+justify-content:center;
+transition:transform .2s ease;
+}
+
+.btn-restar:hover{
+background:#3b4666;
+}
+
+.btn-sumar{
+background:#e73926;
+color:white;
+border:none;
+cursor:pointer;
+font-weight:bold;
+padding:12px 24px;
+font-size:20px;
+border-radius:5px;
+display:flex;
+align-items:center;
+justify-content:center;
+transition:
+transform .2s ease,
+border-radius .3s ease;
 }
 
 .btn-sumar:hover{
@@ -313,50 +254,73 @@ background:linear-gradient(
 var(--acento-hover),
 #6366f1
 );
-
 transform:scale(1.05);
 }
 
-.btn-restar{
-background:#2a344d;
-color:white;
+.btn-sumar:active,
+.btn-restar:active{
+transform:scale(.95);
 }
 
-.btn-restar:hover{
-background:#3b4666;
-}
-
-.btn-subir-imagen-icono{
-background:#172036;
+.btn-subir{
+background:#0f52fb;
 color:white;
-border:1px dashed #4f46e5;
+border:none;
+cursor:pointer;
+font-weight:bold;
+padding:12px 24px;
+font-size:20px;
+border-radius:5px;
+display:flex;
+align-items:center;
+justify-content:center;
+transition:transform .2s ease;
 }
 
 .btn-subir-imagen-icono:hover{
-background:#1f2a44;
+transform:scale(1.1);
 }
 
-.existencia-numero{
-font-size:18px;
-font-weight:800;
-color:#c4b5fd;
+.btn-subir-modal{
+background:#0422e7;
+color:white;
+border:none;
+cursor:pointer;
+padding:10px;
+border-radius:8px;
+display:flex;
+align-items:center;
+justify-content:center;
+transition:
+transform .2s ease,
+background .3s ease;
+min-height:60px;
+min-width:100px;
+}
+
+.icono-boton{
+width:20px;
+height:20px;
+object-fit:contain;
 }
 
 /* =========================================
-INFO
+7.INFO JUGADOR
 ========================================= */
 
-.card-info-inferior{
+.fila-info-adicional{
 display:flex;
 flex-direction:column;
-gap:4px;
+align-items:flex-start;
+gap:2px;
+width:100%;
 }
 
 .jugador-nombre{
+display:block;
 font-size:16px;
 font-weight:700;
 color:white;
-
 white-space:nowrap;
 overflow:hidden;
 text-overflow:ellipsis;
@@ -365,180 +329,113 @@ text-overflow:ellipsis;
 .jugador-pais{
 font-size:13px;
 color:var(--texto-secundario);
-
 white-space:nowrap;
 overflow:hidden;
 text-overflow:ellipsis;
 }
 
+.jugador-cantidad-contenedor{
+display:flex;
+align-items:center;
+gap:4px;
+white-space:nowrap;
+}
+
+.jugador-cantidad-contenedor .label{
+font-size:clamp(12px,1.5vw,17px);
+white-space:nowrap;
+opacity:.8;
+margin-left:1px;
+}
+
+.jugador-cantidad-contenedor .valor{
+font-size:clamp(15px,2.5vw,18px);
+color:var(--success);
+white-space:nowrap;
+line-height:1.1;
+font-weight:bold;
+}
+
 /* =========================================
-LOADER
+8.MODAL
 ========================================= */
 
-.loader-inicial{
-padding:40px;
-text-align:center;
-color:white;
+.modal-overlay{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.7);
+display:none;
+z-index:2000;
 }
 
-.spinner-icono{
-font-size:2rem;
-display:inline-block;
-animation:girarBalon 1s linear infinite;
-margin-bottom:10px;
+.modal-overlay.activo{
+display:flex;
+align-items:flex-end;
 }
 
-@keyframes girarBalon{
-
-from{
-transform:rotate(0deg);
+.modal-contenido{
+width:100%;
+min-height:250px;
+height:auto;
+max-height:80vh;
+background:var(--bg-card);
+border-radius:20px 20px 0 0;
+padding:20px;
+transform:translateY(100%);
+transition:transform .3s ease;
 }
 
-to{
-transform:rotate(360deg);
+.modal-overlay.activo .modal-contenido{
+transform:translateY(0);
 }
 
+.modal-header{
+user-select:none;
+cursor:default;
+}
+
+.modal-botones{
+display:flex;
+align-items:flex-end;
+align-self:flex-end;
+gap:20px;
+margin-top:3.5vh;
+height:60px;
+}
+
+.bloque-cantidad{
+flex:0 0 60%;
+display:flex;
+align-items:center;
+justify-content:space-between;
+padding:5px;
+border-radius:12px;
+height:50px;
+}
+
+.contenedor-subir{
+flex:1;
+display:flex;
+align-items:center;
+justify-content:flex-end;
+padding:5px;
+height:60px;
+border-radius:5px;
 }
 
 /* =========================================
-RESPONSIVE
-========================================= */
-
-@media (min-width:1200px){
-
-.contenedor-grid{
-grid-template-columns:repeat(5,1fr);
-}
-
-}
-
-@media (min-width:1500px){
-
-.contenedor-grid{
-grid-template-columns:repeat(6,1fr);
-}
-
-.card{
-padding:0px;
-}
-
-}
-
-@media (max-width:950px){
-
-body{
-padding-top:100px;
-}
-
-.card{
-padding:0px;
-}
-
-.contenedor-grid{
-grid-template-columns:repeat(4,1fr);
-gap:14px;
-padding:16px;
-}
-
-.grupo-header{
-font-size:20px;
-padding:16px;
-}
-
-}
-
-@media (max-width:600px){
-
-body{
-padding-top:72px;
-}
-
-.navbar{
-padding:14px;
-}
-
-.logo{
-font-size:20px;
-}
-
-.grupo-header{
-font-size:18px;
-padding:14px 16px;
-}
-
-.contenedor-grid{
-grid-template-columns:repeat(4,1fr);
-gap:2px;
-padding:2px;
-}
-
-.card{
-padding:2px;
-border-radius:14px;
-}
-
-.card-bloque-superior{
-flex-direction:column;
-width:100%;
-}
-
-.card-controles-laterales{
-width:100%;
-flex-direction:row;
-}
-
-.btn-control,
-.btn-subir-imagen-icono{
-height:32px;
-font-size:13px;
-}
-
-.jugador-nombre{
-font-size:13px;
-}
-
-.jugador-pais{
-font-size:11px;
-}
-
-}
-
-/* =========================================
-EFECTO TOUCH
+9.TOUCH
 ========================================= */
 
 .imagen-clickeable{
-transition:transform 0.1s ease;
+transition:transform .1s ease;
 -webkit-tap-highlight-color:transparent;
 }
 
 .imagen-clickeable:active{
-transform:scale(0.96);
-filter:brightness(0.9);
+transform:scale(.96);
+filter:brightness(.9);
 }
-
-
-.pais-bloque {
-    margin: 10px;
-    border: 1px solid var(--borde);
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.03);
-}
-
-.pais-header {
-    padding: 12px 18px;
-    cursor: pointer;
-    background: rgba(0, 0, 0, 0.2);
-    font-weight: 600;
-    display: flex;
-    justify-content: space-between;
-}
-
-.pais-header:hover {
-    background: rgba(0, 0, 0, 0.3);
-}
-
-
-
-
-

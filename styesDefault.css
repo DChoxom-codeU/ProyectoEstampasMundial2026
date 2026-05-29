@@ -1,0 +1,158 @@
+
+/* =========================================
+1.RESET
+========================================= */
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+}
+
+/* =========================================
+2.VARIABLES
+========================================= */
+
+:root{
+--bg-principal:#0b1020;
+--bg-secundario:#12192b;
+--bg-card:#171f33;
+--navbar:#0f1729;
+--texto:#f2f5ff;
+--texto-secundario:#9da8c7;
+--borde:#24304d;
+--acento:#7c3aed;
+--acento-hover:#a855f7;
+--danger:#ef4444;
+--danger-hover:#f87171;
+--success:#22c55e;
+--success-hover:#4ade80;
+--shadow:0 8px 25px rgba(0,0,0,0.45);
+--input-bg:#1b2540;
+}
+
+/* =========================================
+3.BASE
+========================================= */
+
+body{
+background:linear-gradient(
+180deg,
+#0b1020 0%,
+#111827 100%
+);
+color:var(--texto);
+min-height:100vh;
+overflow-x:hidden;
+padding-top:90px;
+transition:
+background .3s ease,
+padding-top .3s ease;
+}
+
+/* =========================================
+4.LAYOUT
+========================================= */
+
+.contenedor-principal{
+width:100%;
+max-width:1800px;
+margin:0 auto;
+padding:20px;
+}
+
+.contenedor-grid{
+width:100%;
+padding:20px;
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:20px;
+}
+
+/* =========================================
+5.NAVBAR
+========================================= */
+
+.navbar{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+background:rgba(15,23,41,0.92);
+backdrop-filter:blur(10px);
+border-bottom:1px solid var(--borde);
+display:flex;
+align-items:center;
+justify-content:center;
+padding:14px 20px;
+z-index:1000;
+box-shadow:0 4px 18px rgba(0,0,0,0.4);
+}
+
+.navbar-linea-superior{
+display:flex;
+align-items:center;
+justify-content:center;
+width:100%;
+}
+
+.logo{
+font-size:24px;
+font-weight:800;
+letter-spacing:1px;
+color:white;
+text-shadow:0 0 10px rgba(124,58,237,.4);
+}
+
+/* =========================================
+6.LOADER
+========================================= */
+
+.loader-inicial{
+padding:40px;
+text-align:center;
+color:white;
+}
+
+.spinner-icono{
+font-size:2rem;
+display:inline-block;
+animation:girarBalon 1s linear infinite;
+margin-bottom:10px;
+}
+
+/* =========================================
+7.UTILIDADES
+========================================= */
+
+.valor{
+padding:0;
+}
+
+.valor-modal{
+padding:15px;
+}
+
+.existencia-numero{
+font-size:18px;
+font-weight:800;
+color:#c4b5fd;
+}
+
+/* =========================================
+8.ANIMACIONES
+========================================= */
+
+@keyframes girarBalon{
+
+from{
+transform:rotate(0deg);
+}
+
+to{
+transform:rotate(360deg);
+}
+
+}
+

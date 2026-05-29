@@ -90,6 +90,9 @@ app.get('/api/estampas', (req, res) => {
             paises.nombre_pais,
             paises.bandera_url
 
+
+
+
         FROM estampas
         INNER JOIN paises ON estampas.id_pais = paises.id_pais
         INNER JOIN grupos ON paises.id_grupo = grupos.id_grupo
@@ -101,27 +104,32 @@ app.get('/api/estampas', (req, res) => {
         const estructura = {};
 
         resultados.forEach(item => {
-            // 1. Asegurar Grupo
-            if (!estructura[item.id_grupo]) {
-                estructura[item.id_grupo] = {
-                    id_grupo: item.id_grupo,
-                    grupo_name: item.grupo_name,
-                    paises: {} // Aquí guardaremos los países
-                };
-            }
-            // 2. Asegurar País dentro del grupo
-            const grupo = estructura[item.id_grupo];
-            if (!grupo.paises[item.id_pais]) {
-                grupo.paises[item.id_pais] = {
-                    id_pais: item.id_pais,
-                    nombre_pais: item.nombre_pais,
-                    bandera_url: item.bandera_url, // <--- ¡AQUÍ ESTABA EL ERROR! Faltaba esta línea
-                    estampas: []
-                };
-            }
-            // 3. Agregar Estampa al país
-            grupo.paises[item.id_pais].estampas.push(item);
-        });
+    // 1. Asegurar Grupo
+    if (!estructura[item.id_grupo]) {
+        estructura[item.id_grupo] = {
+            id_grupo: item.id_grupo,
+            grupo_name: item.grupo_name,
+            paises: {} 
+        };
+    }
+
+    // 2. Asegurar País dentro del grupo
+    const grupo = estructura[item.id_grupo];
+    if (!grupo.paises[item.id_pais]) {
+        grupo.paises[item.id_pais] = {
+            id_pais: item.id_pais,
+            nombre_pais: item.nombre_pais,
+            bandera_url: item.bandera_url,
+            numero_album: item.numero_album, // Asegúrate de que el nombre de la propiedad coincida con lo que viene en 'item'
+            
+            estampas: []
+        };
+    }
+
+    // 3. Agregar Estampa al país
+    grupo.paises[item.id_pais].estampas.push(item);
+});
+
         // Convertir objetos a arrays para que el front lo recorra fácil
         const gruposFinal = Object.values(estructura).map(g => ({
             ...g,

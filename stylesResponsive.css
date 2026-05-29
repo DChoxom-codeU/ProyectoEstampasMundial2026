@@ -1,0 +1,203 @@
+
+/* =========================================
+1.DESKTOP
+========================================= */
+
+@media (min-width:1200px){
+
+.contenedor-grid{
+grid-template-columns:repeat(5,1fr);
+}
+
+.btn-restar,
+.btn-sumar,
+.btn-subir{
+min-height:15%;
+min-width:90%;
+}
+
+.pais-header{
+font-size:20px;
+}
+
+}
+
+/* =========================================
+2.DESKTOP GRANDE
+========================================= */
+
+@media (min-width:1500px){
+
+.contenedor-grid{
+grid-template-columns:repeat(6,1fr);
+}
+
+.card{
+padding:0;
+}
+
+.card-controles-laterales{
+width:70px;
+padding-top:5px;
+padding-right:5px;
+}
+
+.btn-restar,
+.btn-sumar,
+.btn-subir{
+min-height:15%;
+min-width:90%;
+}
+
+.pais-header{
+font-size:22px;
+}
+
+}
+
+/* =========================================
+3.TABLET
+========================================= */
+
+@media (max-width:850px){
+
+body{
+padding-top:100px;
+}
+
+.contenedor-grid{
+grid-template-columns:repeat(3,1fr);
+gap:14px;
+padding:16px;
+}
+
+.card{
+padding:0;
+}
+
+.grupo-header{
+font-size:20px;
+padding:16px;
+}
+
+}
+
+/* =========================================
+4.MOBILE
+========================================= */
+
+@media (max-width:600px){
+
+body{
+padding-top:72px;
+}
+
+.navbar{
+padding:14px;
+}
+
+.logo{
+font-size:20px;
+}
+
+.contenedor-principal{
+padding:4px;
+}
+
+.grupo-acordeon{
+margin-bottom:4px;
+}
+
+.grupo-header{
+font-size:18px;
+padding:14px 16px;
+}
+
+.contenedor-grid{
+grid-template-columns:repeat(4,1fr);
+gap:2px;
+padding:2px;
+}
+
+.card{
+padding:2px;
+border-radius:5px;
+}
+
+.card-bloque-superior{
+flex-direction:column;
+width:100%;
+}
+
+.card-controles-laterales{
+width:100%;
+flex-direction:row;
+}
+
+.jugador-nombre{
+font-size:13px;
+display:none !important;
+}
+
+.jugador-pais{
+font-size:14px;
+}
+
+/* =========================================
+MENU TOUCH
+========================================= */
+
+.mobile-hidden-controls{
+display:none !important;
+position:absolute;
+top:0;
+left:0;
+right:0;
+bottom:0;
+background:rgba(11,16,32,0.85);
+display:flex !important;
+flex-direction:row !important;
+justify-content:center;
+align-items:center;
+gap:10px;
+z-index:100;
+border-radius:14px;
+}
+
+.mobile-hidden-controls.visible{
+display:flex !important;
+}
+
+.card:not(.mostrar-menu) .mobile-hidden-controls{
+display:none !important;
+}
+
+/* =========================================
+BOTONES MOBILE
+========================================= */
+
+.btn-restar,
+.btn-sumar{
+padding:12px 24px;
+font-size:20px;
+border-radius:50px !important;
+display:flex;
+align-items:center;
+justify-content:center;
+min-height:60px;
+min-width:60px;
+}
+
+.btn-subir{
+padding:12px 24px;
+border-radius:5px !important;
+display:flex;
+align-items:flex-end;
+justify-content:flex-end;
+min-height:60px;
+min-width:100px;
+padding-right:10px;
+}
+
+}
+

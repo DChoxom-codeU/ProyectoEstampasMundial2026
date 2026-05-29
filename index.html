@@ -14,6 +14,8 @@
     <!-- CSS -->
 
     <link  rel="stylesheet" href="stylesStampa.css">
+        <link  rel="stylesheet" href="styesDefault.css">
+            <link  rel="stylesheet" href="stylesResponsive.css">
 </head>
 
 <body>
@@ -50,9 +52,33 @@
         </div>
     </main>
 
+<div id="modal-estampa" class="modal-overlay">
+    <div class="modal-contenido">
+        <div class="modal-header">
+            <h2 id="modal-nombre">Nombre</h2>
+            <p id="modal-album">Álbum: ---</p>
+        </div>
+      
+        <div class="modal-botones">
+            <div class="bloque-cantidad">
+            <button class="btn-accion btn-restar" onclick="actualizarModal(-1)">-</button>
+             <span id="modal-cantidad-valor" class="valor-modal">0</span>
+            <button class="btn-accion btn-sumar" onclick="actualizarModal(1)">+</button>
+           </div>
+
+            <div class="contenedor-subir">
+                <div id="contenedor-boton-camara"></div>
+            </div>
+            </div>
+    </div>
+    </div>
+</div>
+    
+
     <!-- ====================================== -->
     <!-- SCRIPT -->
     <script src="scriptStampa.js"></script>
+    
 
 </body>
 </html>
