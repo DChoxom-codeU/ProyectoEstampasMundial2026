@@ -47,10 +47,10 @@ cloudinary.config({
 
 const conexion = mysql.createConnection({
 
-    host: '8080',
-    port: 3306,
+    host: 'kodama.proxy.rlwy.net',
+    port: 35172,
     user: 'root',
-    password: 'link',
+    password: 'ejgWvsUPJfRpTIgzuFQDWYLrsDCrQnof',
     database: 'albumvirtualgestordata'
 });
 
