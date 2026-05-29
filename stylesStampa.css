@@ -18,7 +18,7 @@ align-items:center;
 justify-content:space-between;
 padding:18px 22px;
 cursor:pointer;
-font-size:22px;
+font-size:24px;
 font-weight:800;
 background:linear-gradient(
 135deg,
@@ -71,6 +71,7 @@ background:rgba(0,0,0,0.2);
 font-weight:600;
 display:flex;
 justify-content:space-between;
+
 }
 
 .pais-header:hover{
@@ -439,3 +440,4 @@ transition:transform .1s ease;
 transform:scale(.96);
 filter:brightness(.9);
 }
+

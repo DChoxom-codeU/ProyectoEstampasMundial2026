@@ -31,13 +31,34 @@
     <!-- ====================================== -->
     <!-- NAVBAR -->
 
-    <header class="navbar">
-        <div class="navbar-linea-superior">
-            <div class="logo">
-                Álbum Mundial 2026 ⚽
-            </div>
-        </div>
-    </header>
+   <header class="navbar">
+    <div class="navbar-linea-superior">
+        <div class="logo">Álbum Mundial 2026 ⚽</div>
+    </div>
+
+    
+  <div class="navbar-filtros">
+    <button class="btn-toggle-filtro" onclick="toggleFiltros()">
+        ⚙️ Filtros
+    </button>
+    
+    <div id="filtros-contenido" class="filtros-contenido">
+        <input type="text" id="input-buscar" placeholder="🔍 Buscar por nombre o número..." />
+        
+        <select id="select-cantidad">
+            <option value="todas">Cualquier cantidad</option>
+            <option value="0">Sin poseer (0)</option>
+            <option value="1">Tengo (1)</option>
+            <option value="2">Repetidos (2+)</option>
+        </select>
+    </div>
+</div>
+
+   
+    
+
+
+</header>
 
     <!-- ====================================== -->
     <!-- CONTENEDOR PRINCIPAL -->

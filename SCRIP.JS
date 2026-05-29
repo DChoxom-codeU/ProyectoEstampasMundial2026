@@ -308,7 +308,7 @@ function filtrarYRenderizar() {
         const acordeonHTML = `
             <div class="grupo-acordeon ">
                 <div class="grupo-header " onclick="toggleGrupo(${grupo.id_grupo})">   <span>${grupo.grupo_name}</span>
-                        <span id="icono">▼</span>
+                        <span id="icono-${grupo.id_grupo}">▼</span>
                     </div>
                     <div class="grupo-contenido ${claseAbierto}" id="grupo-${grupo.id_grupo}">
                         ${grupo.paises.map(pais => `

@@ -156,3 +156,103 @@ transform:rotate(360deg);
 
 }
 
+
+
+
+/* Esto es lo que hace que la clase realmente abra el contenido */
+.grupo-contenido {
+    display: none; /* Por defecto oculto */
+}
+
+/* Esto asegura que el grupo se muestre si tiene la clase .grupo-abierto */
+.grupo-contenido.grupo-abierto {
+    display: block !important; /* El !important fuerza la apertura */
+}
+
+/* Y asegúrate de que el icono también cambie de dirección si lo necesitas */
+.grupo-header.grupo-abierto .icono {
+    transform: rotate(180deg);
+}
+
+
+
+/* 1. Navbar: Contenedor principal */
+.navbar-filtros {
+    background: rgba(15, 23, 41, 0.92);
+    padding: 10px 15px;
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-sizing: border-box;
+}
+
+/* 2. Botón: Solo se ve en móvil */
+.btn-toggle-filtro {
+    display: none;
+    background: #4f46e5;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+/* 3. Filtros: Diseño Base (Horizontal para PC) */
+.filtros-contenido {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    transition: all 0.3s ease;
+}
+
+/* 4. Estilos de inputs y selects */
+#input-buscar, #select-cantidad {
+    background: #1e293b;
+    color: #f8fafc;
+    border: 1px solid #475569;
+    padding: 10px;
+    border-radius: 8px;
+    outline: none;
+}
+
+#input-buscar::placeholder { color: #94a3b8; }
+
+/* 5. Diseño Móvil (Responsive: Desplazamiento desde la derecha) */
+@media (max-width: 600px) {
+    .btn-toggle-filtro { 
+        display: block; 
+    }
+    
+    .filtros-contenido {
+        position: fixed;
+        top: 55px;        /* Ajusta según la altura de tu navbar */
+        right: -280px;    /* Escondido fuera de pantalla a la derecha */
+        width: 280px;     /* Ancho compacto */
+        height: auto;     /* Ajustado solo al contenido */
+        background: rgba(15, 23, 41, 0.98);
+        padding: 15px;
+        flex-direction: column;
+        align-items: stretch;
+        border-radius: 0 0 0 10px;
+        border-left: 2px solid #334155;
+        border-bottom: 2px solid #334155;
+        box-shadow: -5px 5px 15px rgba(0,0,0,0.3);
+        z-index: 2000;
+    }
+    
+    /* Clase que activa la animación */
+    .filtros-contenido.show { 
+        right: 0; 
+    }
+    
+    /* En móvil, los elementos llenan el ancho del submenú */
+    #input-buscar, #select-cantidad {
+        width: 100%;
+        box-sizing: border-box;
+    }
+}
