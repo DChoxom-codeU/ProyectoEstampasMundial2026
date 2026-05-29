@@ -47,7 +47,7 @@ cloudinary.config({
 
 const conexion = mysql.createConnection({
 
-    host: '0.0.0.0',
+    host: '8080',
     port: 3306,
     user: 'root',
     password: 'link',
