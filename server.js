@@ -47,7 +47,7 @@ cloudinary.config({
 
 const conexion = mysql.createConnection({
 
-    host: 'localhost',
+    host: '0.0.0.0',
     port: 3306,
     user: 'root',
     password: 'link',
@@ -331,6 +331,6 @@ app.listen( puertoServer, '0.0.0.0',
     (err) => {
         if (err) {
             console.error( "❌ Error levantando servidor:",  err ); return; }
-        console.log(  `🚀 Servidor funcionando en:http://localhost:${puertoServer}`);
+        console.log(  `🚀 Servidor funcionando en:http://192.168.0.109:${puertoServer}`);
     }
 );
